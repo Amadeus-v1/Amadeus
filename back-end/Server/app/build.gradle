@@ -23,6 +23,7 @@ dependencies {
 
     // This dependency is used by the application.
     implementation libs.guava
+    implementation 'org.json:json:20240303'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -34,7 +35,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.amadeus.amadeus.App'
+    mainClass = 'org.amadeus.amadeusserver.App'
 }
 
 tasks.named('test') {
