@@ -1,6 +1,9 @@
 package org.amadeus.amadeusserver;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import org.json.JSONObject;
 
@@ -36,6 +39,18 @@ public class ClientCom {
         exchange.sendResponseHeaders(statusCode, responseString.getBytes().length);
         exchange.getResponseBody().write(responseString.getBytes());
         exchange.close();
+    }
+    
+    public static void sendError(HttpExchange exchange, int statusCode, String message) throws IOException {
+        JSONObject error = new JSONObject();
+        error.put("message", message);
+        sendJsonResponse(exchange, statusCode, error);
+    }
+    
+    public static JSONObject readJsonBody(HttpExchange exchange) throws IOException {
+        InputStream body = exchange.getRequestBody();
+        String text = new String(body.readAllBytes(), StandardCharsets.UTF_8);
+        return new JSONObject(text);
     }
     
     // Template: Handle endpoint with required parameter validation
@@ -78,5 +93,55 @@ public class ClientCom {
     // Specific endpoint implementation using template
     public static void handleReturnRequest(HttpExchange exchange) throws IOException {
         handleAllParametersEndpoint(exchange);
+    }
+
+    public static void handleUserCreateRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        // TODO: validate user fields here
+        String username = requestJson.optString("username", null);
+        String email = requestJson.optString("email", null);
+        String password = requestJson.optString("password", null);
+
+        if (username == null || username.isBlank()) {
+            sendError(exchange, 400, "Missing username");
+            return;
+        }
+        if (email == null || email.isBlank()) {
+            sendError(exchange, 400, "Missing email");
+            return;
+        }
+        if (password == null || password.isBlank()) {
+            sendError(exchange, 400, "Missing password");
+            return;
+        }
+
+        // Generate a placeholder password hash for the first user
+        String passwordHash = "hash_" + UUID.randomUUID().toString().replace("-", "");
+
+        // TODO: create and store the user using your chosen storage method
+        // Example: use ModifyStorage.update(...) or another storage helper
+        JSONObject createdUser = new JSONObject();
+        createdUser.put("username", username);
+        createdUser.put("email", email);
+        createdUser.put("passwordHash", passwordHash);
+        createdUser.put("id", 0); // TODO: replace with generated ID
+        ModifyStorage.update(createdUser, "userAccounts.json");
+
+        JSONObject response = new JSONObject();
+        response.put("message", "User created");
+        response.put("user", createdUser);
+        sendJsonResponse(exchange, 201, response);
     }
 }

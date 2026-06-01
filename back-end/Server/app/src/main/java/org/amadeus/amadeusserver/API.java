@@ -12,6 +12,7 @@ public class API {
 
         server.createContext("/api/hello", exchange -> ClientCom.handleHelloRequest(exchange));
         server.createContext("/api/return", exchange -> ClientCom.handleReturnRequest(exchange));
+        server.createContext("/api/user/create", exchange -> ClientCom.handleUserCreateRequest(exchange));
 
         server.start();
     }
