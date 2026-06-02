@@ -8,7 +8,8 @@ import com.sun.net.httpserver.HttpServer;
 public class API {
     
     public static void setUpServer() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        // Changed port from 8080 to 8081 to avoid "Address already in use" errors
+        HttpServer server = HttpServer.create(new InetSocketAddress(8081), 0);
 
         server.createContext("/api/hello", exchange -> ClientCom.handleHelloRequest(exchange));
         server.createContext("/api/return", exchange -> ClientCom.handleReturnRequest(exchange));

@@ -32,6 +32,7 @@ public class ClientCom {
     
     public static void sendJsonResponse(HttpExchange exchange, int statusCode, JSONObject response) throws IOException {
         String responseString = response.toString();
+        System.out.println("Sending response [" + statusCode + "]: " + responseString);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.sendResponseHeaders(statusCode, responseString.getBytes().length);
         exchange.getResponseBody().write(responseString.getBytes());
@@ -41,6 +42,7 @@ public class ClientCom {
     // Template: Handle endpoint with required parameter validation
     public static void handleRequiredParameterEndpoint(HttpExchange exchange, String paramName, String successMessageTemplate, String errorMessage) throws IOException {
         String query = exchange.getRequestURI().getQuery();
+        System.out.println("Received request: " + exchange.getRequestURI() + " Query: " + query);
         JSONObject jsonResponse = new JSONObject();
         
         if (query != null && query.contains(paramName + "=") && query.length() > paramName.length() + 1) {
@@ -56,12 +58,17 @@ public class ClientCom {
     // Template: Handle endpoint that returns all query parameters
     public static void handleAllParametersEndpoint(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
+        System.out.println("Received request: " + exchange.getRequestURI() + " Query: " + query);
         JSONObject jsonResponse = new JSONObject();
         
         if (query != null) {
             String[][] allQueryParams = processAllQuery(query);
             for (String[] param : allQueryParams) {
-                jsonResponse.put(param[0], param[1]);
+                if (param.length == 2) {
+                    jsonResponse.put(param[0], param[1]);
+                } else if (param.length == 1) {
+                    jsonResponse.put(param[0], "");
+                }
             }
             sendJsonResponse(exchange, 200, jsonResponse);
         } else {

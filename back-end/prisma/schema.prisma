@@ -1,0 +1,103 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum MediaType {
+  VINYL
+  CD
+  DVD
+  BLURAY
+  BOOK
+  CASSETTE
+  OTHER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String?   @unique
+  passwordHash  String
+  displayName   String?
+  profilePic    String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  
+  // Relations
+  collection       CollectionItem[]
+  sentRequests     FriendRequest[]  @relation("SentRequests")
+  receivedRequests  FriendRequest[] @relation("ReceivedRequests")
+  friends          Friendship[]     @relation("UserFriends")
+  friendOf         Friendship[]     @relation("FriendOf")
+}
+
+model MediaItem {
+  id          String    @id @default(cuid())
+  title       String
+  creator     String    // Artist, Author, etc.
+  type        MediaType
+  releaseYear Int?
+  barcode     String?   @unique
+  baseCover   String?   // URL to standard cover
+  
+  variants    MediaVariant[]
+  userEntries CollectionItem[]
+}
+
+model MediaVariant {
+  id          String    @id @default(cuid())
+  mediaItemId String
+  mediaItem   MediaItem @relation(fields: [mediaItemId], references: [id])
+  name        String    // e.g., "Blue Marble Vinyl", "Special Edition"
+  description String?
+  
+  collectionItems CollectionItem[]
+}
+
+model CollectionItem {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  mediaItemId     String
+  mediaItem       MediaItem    @relation(fields: [mediaItemId], references: [id])
+  variantId       String?
+  variant         MediaVariant? @relation(fields: [variantId], references: [id])
+  
+  // Metadata
+  condition       String?      // e.g., Mint, Near Mint
+  dateAcquired    DateTime?
+  purchasePrice   Decimal?
+  estimatedValue  Decimal?
+  notes           String?
+  quantity        Int          @default(1)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  user      User     @relation("UserFriends", fields: [userId], references: [id])
+  friend    User     @relation("FriendOf", fields: [friendId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model FriendRequest {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  status      String   // PENDING, ACCEPTED, DECLINED
+  sender      User     @relation("SentRequests", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  createdAt   DateTime @default(now())
+}

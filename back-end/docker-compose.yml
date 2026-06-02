@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=amadeus
+      - POSTGRES_PASSWORD=amadeus_pass
+      - POSTGRES_DB=amadeus_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://amadeus:amadeus_pass@db:5432/amadeus_db?schema=public
+      - JWT_SECRET=change_this_to_something_secure
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

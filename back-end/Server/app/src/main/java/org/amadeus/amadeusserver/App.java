@@ -8,9 +8,12 @@ import java.io.IOException;
 public class App {
 
     public static void main(String[] args) {
+        System.out.println("Starting Amadeus Server...");
         try {
             API.setUpServer();
+            System.out.println("Server is running on http://localhost:8081");
         } catch (IOException e) {
+            System.err.println("Failed to start server: " + e.getMessage());
             e.printStackTrace();
         }
     }
