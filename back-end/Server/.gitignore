@@ -6,3 +6,9 @@ build
 
 # Ignore Kotlin plugin data
 .kotlin
+
+# Ignore build files
+app/build/
+
+# Ignore database files
+app/src/main/java/org/amadeus/amadeusserver/userAccounts.json

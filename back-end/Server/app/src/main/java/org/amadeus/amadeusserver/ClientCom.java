@@ -3,6 +3,7 @@ package org.amadeus.amadeusserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 import org.json.JSONObject;
@@ -10,20 +11,22 @@ import org.json.JSONObject;
 import com.sun.net.httpserver.HttpExchange;
 
 public class ClientCom {
+    private static final String USER_STORAGE_FILE = "userAccounts.json";
+
     public static String processQuery(String query, String valueName) {
         String value = null;
 
         if (query != null) {
-            query = "&" + query; 
+            query = "&" + query;
 
             if (query.contains("&" + valueName + "=")) {
-                value = query.substring(query.indexOf("&" + valueName + "=") + valueName.length() + 2); // 3. Changed +1 to +2 to account for the extra '&' character length
+                value = query.substring(query.indexOf("&" + valueName + "=") + valueName.length() + 2);
                 value = value.split("&")[0];
             }
         }
         return value;
     }
-    
+
     public static String[][] processAllQuery(String query) {
         String[] querySplitTemp = query.split("&");
         String[][] parsedQuery = new String[querySplitTemp.length][2];
@@ -95,6 +98,64 @@ public class ClientCom {
         handleAllParametersEndpoint(exchange);
     }
 
+    public static void handleUserLoginRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String username = requestJson.optString("username", null);
+        String email = requestJson.optString("email", null);
+        String password = requestJson.optString("password", null);
+
+        if ((username == null || username.isBlank()) && (email == null || email.isBlank())) {
+            sendError(exchange, 400, "Missing username or email");
+            return;
+        }
+        if (password == null || password.isBlank()) {
+            sendError(exchange, 400, "Missing password");
+            return;
+        }
+
+        List<JSONObject> users = ModifyStorage.readJsonArrayList("users", USER_STORAGE_FILE);
+
+        JSONObject user = users.stream()
+                .filter(u -> (username != null && username.equals(u.optString("username")))
+                        || (email != null && email.equals(u.optString("email"))))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            sendError(exchange, 401, "Invalid username or password");
+            return;
+        }
+
+        String storedHash = user.optString("passwordHash", "");
+        String storedSalt = user.optString("passwordSalt", "");
+
+        if (PasswordHash.verifyPassword(password, storedSalt, storedHash)) {
+            JSONObject responseUser = new JSONObject();
+            responseUser.put("id", user.optString("id"));
+            responseUser.put("username", user.optString("username"));
+            responseUser.put("email", user.optString("email"));
+
+            JSONObject response = new JSONObject();
+            response.put("message", "Login successful");
+            response.put("user", responseUser);
+            sendJsonResponse(exchange, 200, response);
+        } else {
+            sendError(exchange, 401, "Invalid username or password");
+        }
+    }
+
     public static void handleUserCreateRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");
@@ -114,6 +175,7 @@ public class ClientCom {
         String email = requestJson.optString("email", null);
         String password = requestJson.optString("password", null);
 
+        
         if (username == null || username.isBlank()) {
             sendError(exchange, 400, "Missing username");
             return;
@@ -127,21 +189,43 @@ public class ClientCom {
             return;
         }
 
-        // Generate a placeholder password hash for the first user
-        String passwordHash = "hash_" + UUID.randomUUID().toString().replace("-", "");
+        String passwordSalt = PasswordHash.generateSalt();
+        String passwordHash = PasswordHash.hashPassword(password, passwordSalt);
 
-        // TODO: create and store the user using your chosen storage method
-        // Example: use ModifyStorage.update(...) or another storage helper
         JSONObject createdUser = new JSONObject();
         createdUser.put("username", username);
+
+        List<JSONObject> users = ModifyStorage.readJsonArrayList("users", USER_STORAGE_FILE);
+
+        if (users.stream().anyMatch(user -> user.optString("username").equals(username))) {
+            sendError(exchange, 400, "Username already in use");
+            return;
+        }
+
         createdUser.put("email", email);
         createdUser.put("passwordHash", passwordHash);
-        createdUser.put("id", 0); // TODO: replace with generated ID
-        ModifyStorage.update(createdUser, "userAccounts.json");
+        createdUser.put("passwordSalt", passwordSalt);
+
+        // Generate a unique ID for the user
+        while (true) {
+            String newId = UUID.randomUUID().toString();
+            if (users.stream().noneMatch(user -> user.optString("id").equals(newId))) {
+                createdUser.put("id", newId);
+                break;
+            }
+        }
+
+        // Append the new user into the users array inside userAccounts.json
+        ModifyStorage.appendToArray("users", createdUser, "userAccounts.json");
+
+        JSONObject responseUser = new JSONObject();
+        responseUser.put("id", createdUser.optString("id"));
+        responseUser.put("username", createdUser.optString("username"));
+        responseUser.put("email", createdUser.optString("email"));
 
         JSONObject response = new JSONObject();
         response.put("message", "User created");
-        response.put("user", createdUser);
+        response.put("user", responseUser);
         sendJsonResponse(exchange, 201, response);
     }
 }
