@@ -3,7 +3,6 @@ package org.amadeus.amadeusserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
 import org.json.JSONObject;
@@ -11,7 +10,6 @@ import org.json.JSONObject;
 import com.sun.net.httpserver.HttpExchange;
 
 public class ClientCom {
-    private static final String USER_STORAGE_FILE = "userAccounts.json";
 
     public static String processQuery(String query, String valueName) {
         String value = null;
@@ -98,6 +96,277 @@ public class ClientCom {
         handleAllParametersEndpoint(exchange);
     }
 
+    public static void handleCatalogSearchRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String query = processQuery(exchange.getRequestURI().getQuery(), "q");
+        if (query == null || query.isBlank()) {
+            sendError(exchange, 400, "Missing q parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("query", query);
+        response.put("items", MediaStore.search(query));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleCollectionAddRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String userId = requestJson.optString("userId", "");
+        String title = requestJson.optString("title", "");
+        if (userId.isBlank() || title.isBlank()) {
+            sendError(exchange, 400, "Missing userId or title");
+            return;
+        }
+
+        JSONObject item = MediaStore.addItem(requestJson);
+        MediaStore.addToCollection(userId, item.getString("id"), requestJson.optJSONObject("collection") != null
+                ? requestJson.getJSONObject("collection")
+                : new JSONObject());
+
+        JSONObject response = new JSONObject();
+        response.put("message", "Item added to collection");
+        response.put("item", item);
+        sendJsonResponse(exchange, 201, response);
+    }
+
+    public static void handleCollectionListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("userId", userId);
+        response.put("items", MediaStore.listCollection(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleFriendsAddRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String userId = requestJson.optString("userId", "");
+        String friendId = requestJson.optString("friendId", "");
+        if (userId.isBlank() || friendId.isBlank()) {
+            sendError(exchange, 400, "Missing userId or friendId");
+            return;
+        }
+
+        JSONObject result = FriendsStore.addFriend(userId, friendId);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Friend added").put("friend", result));
+    }
+
+    public static void handleFriendsListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("userId", userId);
+        response.put("friends", FriendsStore.listFriends(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleFriendsCollectionsRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("userId", userId);
+        response.put("items", FriendsStore.getFriendsCollections(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleMarketplaceCreateListingRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        if (requestJson.optString("sellerId", "").isBlank() || requestJson.optString("itemId", "").isBlank()) {
+            sendError(exchange, 400, "Missing sellerId or itemId");
+            return;
+        }
+
+        JSONObject listing = MarketplaceStore.createListing(requestJson);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Listing created").put("listing", listing));
+    }
+
+    public static void handleMarketplaceListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String sellerId = processQuery(exchange.getRequestURI().getQuery(), "sellerId");
+        if (sellerId == null || sellerId.isBlank()) {
+            sendError(exchange, 400, "Missing sellerId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("sellerId", sellerId);
+        response.put("listings", MarketplaceStore.listListings(sellerId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleMarketplaceSaleRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        if (requestJson.optString("listingId", "").isBlank()) {
+            sendError(exchange, 400, "Missing listingId");
+            return;
+        }
+
+        JSONObject sale = MarketplaceStore.completeSale(requestJson);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Sale completed").put("sale", sale));
+    }
+
+    public static void handleAuthCreateSessionRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String userId = requestJson.optString("userId", "");
+        if (userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId");
+            return;
+        }
+
+        JSONObject session = AuthStore.createSession(userId);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Session created").put("session", session));
+    }
+
+    public static void handleAuthRefreshRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String refreshToken = requestJson.optString("refreshToken", "");
+        if (refreshToken.isBlank()) {
+            sendError(exchange, 400, "Missing refreshToken");
+            return;
+        }
+
+        JSONObject session = AuthStore.refreshSession(refreshToken);
+        if (session == null) {
+            sendError(exchange, 401, "Invalid refresh token");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, new JSONObject().put("message", "Token refreshed").put("session", session));
+    }
+
+    public static void handleCatalogScanRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String base64Image = requestJson.optString("imageBase64", "");
+        String textHint = requestJson.optString("textHint", "");
+        if (base64Image.isBlank()) {
+            sendError(exchange, 400, "Missing imageBase64");
+            return;
+        }
+
+        JSONObject analysis = ImageMatchService.analyze(base64Image, textHint);
+        sendJsonResponse(exchange, 200, analysis);
+    }
+
     public static void handleUserLoginRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");
@@ -125,13 +394,7 @@ public class ClientCom {
             return;
         }
 
-        List<JSONObject> users = ModifyStorage.readJsonArrayList("users", USER_STORAGE_FILE);
-
-        JSONObject user = users.stream()
-                .filter(u -> (username != null && username.equals(u.optString("username")))
-                        || (email != null && email.equals(u.optString("email"))))
-                .findFirst()
-                .orElse(null);
+        JSONObject user = UserStore.findByUsernameOrEmail(username, email);
 
         if (user == null) {
             sendError(exchange, 401, "Invalid username or password");
@@ -195,9 +458,7 @@ public class ClientCom {
         JSONObject createdUser = new JSONObject();
         createdUser.put("username", username);
 
-        List<JSONObject> users = ModifyStorage.readJsonArrayList("users", USER_STORAGE_FILE);
-
-        if (users.stream().anyMatch(user -> user.optString("username").equals(username))) {
+        if (UserStore.usernameExists(username)) {
             sendError(exchange, 400, "Username already in use");
             return;
         }
@@ -209,14 +470,13 @@ public class ClientCom {
         // Generate a unique ID for the user
         while (true) {
             String newId = UUID.randomUUID().toString();
-            if (users.stream().noneMatch(user -> user.optString("id").equals(newId))) {
+            if (UserStore.findById(newId) == null) {
                 createdUser.put("id", newId);
                 break;
             }
         }
 
-        // Append the new user into the users array inside userAccounts.json
-        ModifyStorage.appendToArray("users", createdUser, "userAccounts.json");
+        UserStore.createUser(createdUser);
 
         JSONObject responseUser = new JSONObject();
         responseUser.put("id", createdUser.optString("id"));
