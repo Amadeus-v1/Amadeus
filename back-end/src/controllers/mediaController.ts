@@ -39,3 +39,42 @@ export const createMediaItem = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Invalid media data' });
   }
 };
+
+export const getRecommendations = async (req: Request, res: Response) => {
+  const userId = (req as any).user.userId;
+
+  try {
+    // 1. Get user's most collected creators
+    const userItems = await prisma.collectionItem.findMany({
+      where: { userId },
+      include: { mediaItem: true },
+    });
+
+    if (userItems.length === 0) {
+      // Return random popular items if collection is empty
+      const popular = await prisma.mediaItem.findMany({ take: 5 });
+      return res.json(popular);
+    }
+
+    const creators = userItems.map(item => item.mediaItem.creator);
+    const types = userItems.map(item => item.mediaItem.type);
+
+    // 2. Find items by same creators or same types that user doesn't own
+    const ownedIds = userItems.map(item => item.mediaItemId);
+
+    const recommendations = await prisma.mediaItem.findMany({
+      where: {
+        id: { notIn: ownedIds },
+        OR: [
+          { creator: { in: creators } },
+          { type: { in: types } }
+        ]
+      },
+      take: 10,
+    });
+
+    res.json(recommendations);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
+  }
+};

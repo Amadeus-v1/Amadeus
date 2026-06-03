@@ -27,14 +27,21 @@ model User {
   displayName   String?
   profilePic    String?
   bio           String?
+  role          String    @default("USER") // USER, ADMIN
   createdAt     DateTime  @default(now())
   
   // Relations
   collection       CollectionItem[]
   sentRequests     FriendRequest[]  @relation("SentRequests")
-  receivedRequests  FriendRequest[] @relation("ReceivedRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
   friends          Friendship[]     @relation("UserFriends")
   friendOf         Friendship[]     @relation("FriendOf")
+  
+  // Marketplace Relations
+  listings         MarketplaceListing[]
+  receivedReviews  Review[]             @relation("UserReviews")
+  sentMessages     Message[]            @relation("SentMessages")
+  receivedMessages Message[]            @relation("ReceivedMessages")
 }
 
 model MediaItem {
@@ -45,6 +52,7 @@ model MediaItem {
   releaseYear Int?
   barcode     String?   @unique
   baseCover   String?   // URL to standard cover
+  isApproved  Boolean   @default(false) // For community database moderation
   
   variants    MediaVariant[]
   userEntries CollectionItem[]
@@ -79,6 +87,8 @@ model CollectionItem {
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+
+  listing         MarketplaceListing?
 }
 
 model Friendship {
@@ -100,4 +110,38 @@ model FriendRequest {
   sender      User     @relation("SentRequests", fields: [senderId], references: [id])
   receiver    User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
   createdAt   DateTime @default(now())
+}
+
+// Marketplace Module
+
+model MarketplaceListing {
+  id               String         @id @default(cuid())
+  sellerId         String
+  seller           User           @relation(fields: [sellerId], references: [id])
+  collectionItemId String         @unique
+  collectionItem   CollectionItem @relation(fields: [collectionItemId], references: [id])
+  price            Decimal
+  description      String?
+  status           String         @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String   // Person being reviewed
+  user       User     @relation("UserReviews", fields: [userId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
 }

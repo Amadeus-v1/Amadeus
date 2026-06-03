@@ -6,6 +6,10 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import collectionRoutes from './routes/collection';
 import friendsRoutes from './routes/friends';
+import mediaRoutes from './routes/media';
+import userRoutes from './routes/user';
+import marketplaceRoutes from './routes/marketplace';
+import adminRoutes from './routes/admin';
 
 dotenv.config();
 
@@ -22,6 +26,10 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/collection', collectionRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Basic Health Check
 app.get('/health', (req, res) => {
