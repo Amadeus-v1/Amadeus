@@ -114,6 +114,104 @@ public class ClientCom {
         sendJsonResponse(exchange, 200, response);
     }
 
+    public static void handleCollectionCategoryCreateRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String name = requestJson.optString("name", "");
+        String kind = requestJson.optString("kind", "media");
+        if (name.isBlank()) {
+            sendError(exchange, 400, "Missing category name");
+            return;
+        }
+
+        JSONObject category = CatalogSchemaStore.createCategory(name, kind, requestJson);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Category created").put("category", category));
+    }
+
+    public static void handleCollectionCategoryListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, new JSONObject().put("categories", CatalogSchemaStore.listCategories()));
+    }
+
+    public static void handleCatalogItemCreateRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        if (requestJson.optString("title", "").isBlank()) {
+            sendError(exchange, 400, "Missing title");
+            return;
+        }
+
+        JSONObject item = CatalogSchemaStore.createCatalogItem(requestJson);
+        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Catalog item created").put("item", item));
+    }
+
+    public static void handleUserCollectionListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, new JSONObject().put("userId", userId)
+                .put("collections", CatalogSchemaStore.listUserCollections(userId)));
+    }
+
+    public static void handleUserCollectionVisibilityRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String entryId = requestJson.optString("entryId", "");
+        String visibility = requestJson.optString("visibility", "private");
+        if (entryId.isBlank()) {
+            sendError(exchange, 400, "Missing entryId");
+            return;
+        }
+
+        JSONObject result = CatalogSchemaStore.updateCollectionVisibility(entryId, visibility);
+        sendJsonResponse(exchange, 200, new JSONObject().put("message", "Visibility updated").put("entry", result));
+    }
+
     public static void handleCollectionAddRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");

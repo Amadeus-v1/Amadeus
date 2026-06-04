@@ -30,6 +30,11 @@ public class API {
         server.createContext("/api/hello", addCORSHeaders(ClientCom::handleHelloRequest));
         server.createContext("/api/return", addCORSHeaders(ClientCom::handleReturnRequest));
         server.createContext("/api/catalog/search", addCORSHeaders(ClientCom::handleCatalogSearchRequest));
+        server.createContext("/api/catalog/create", addCORSHeaders(ClientCom::handleCatalogItemCreateRequest));
+        server.createContext("/api/catalog/categories", addCORSHeaders(ClientCom::handleCollectionCategoryListRequest));
+        server.createContext("/api/catalog/categories/create", addCORSHeaders(ClientCom::handleCollectionCategoryCreateRequest));
+        server.createContext("/api/collection/me", addCORSHeaders(ClientCom::handleUserCollectionListRequest));
+        server.createContext("/api/collection/visibility", addCORSHeaders(ClientCom::handleUserCollectionVisibilityRequest));
         server.createContext("/api/collection/add", addCORSHeaders(ClientCom::handleCollectionAddRequest));
         server.createContext("/api/collection/list", addCORSHeaders(ClientCom::handleCollectionListRequest));
         server.createContext("/api/friends/add", addCORSHeaders(ClientCom::handleFriendsAddRequest));

@@ -89,6 +89,28 @@
                     <button class="btn btn-secondary" onclick="closeCollections()">Close</button>
                 </section>
 
+                <!-- Catalog & Collection Tools -->
+                <section id="catalogSection" class="feature-section">
+                    <h2>Catalog & Collection Tools</h2>
+                    <div class="api-endpoints">
+                        <div class="endpoint-card">
+                            <h3>Collection Categories</h3>
+                            <div id="categoryList" class="collections-list">Loading categories…</div>
+                        </div>
+                        <div class="endpoint-card">
+                            <h3>Create Catalog Item</h3>
+                            <form id="catalogItemForm" class="endpoint-form">
+                                <input type="text" id="catalogTitle" placeholder="Title" required>
+                                <input type="text" id="catalogArtist" placeholder="Artist">
+                                <input type="text" id="catalogCategoryId" placeholder="Category ID (optional)">
+                                <input type="text" id="catalogEdition" placeholder="Edition">
+                                <button type="submit" class="btn btn-primary">Create</button>
+                            </form>
+                            <div id="catalogItemResult" class="endpoint-result hidden"></div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Main Dashboard Content -->
                 <section id="mainContent" class="feature-section">
                     <div class="welcome-card">

@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('viewCollectionsBtn').addEventListener('click', () => {
         window.location.href = 'collection.html';
     });
+    loadCatalogCategories();
+    loadUserCollections();
+    document.getElementById('catalogItemForm').addEventListener('submit', createCatalogItem);
     document.getElementById('browseMarketplaceBtn').addEventListener('click', showComingSoon);
     document.getElementById('connectFriendsBtn').addEventListener('click', showComingSoon);
 
@@ -98,6 +101,69 @@ async function testReturnEndpoint(e) {
 }
 
 // Show coming soon
+async function loadCatalogCategories() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/catalog/categories`);
+        const data = await response.json();
+        const list = document.getElementById('categoryList');
+        const categories = data.categories || [];
+        list.innerHTML = categories.length
+            ? categories.map(item => `<div class="history-item"><strong>${escapeHtml(item.name)}</strong><br><span>${escapeHtml(item.kind || 'media')}</span><br><small>${escapeHtml(item.description || '')}</small></div>`).join('')
+            : '<p class="empty-message">No categories available yet.</p>';
+    } catch (error) {
+        document.getElementById('categoryList').innerHTML = '<p class="empty-message">Unable to load categories.</p>';
+    }
+}
+
+async function loadUserCollections() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/collection/me?userId=${encodeURIComponent(userId)}`);
+        const data = await response.json();
+        const collections = data.collections || [];
+        const target = document.getElementById('collectionsList');
+        if (!target) return;
+        target.innerHTML = collections.length
+            ? collections.map(item => `<div class="history-item"><strong>${escapeHtml(item.itemId)}</strong><br>Visibility: ${escapeHtml(item.visibility || 'private')}</div>`).join('')
+            : '<p class="empty-message">No personal collection entries yet.</p>';
+    } catch (error) {
+        const target = document.getElementById('collectionsList');
+        if (target) target.innerHTML = '<p class="empty-message">Unable to load your collections.</p>';
+    }
+}
+
+async function createCatalogItem(e) {
+    e.preventDefault();
+    const payload = {
+        title: document.getElementById('catalogTitle').value.trim(),
+        artist: document.getElementById('catalogArtist').value.trim(),
+        categoryId: document.getElementById('catalogCategoryId').value.trim() || 'records',
+        edition: document.getElementById('catalogEdition').value.trim(),
+        submittedBy: localStorage.getItem('userId') || 'guest'
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/catalog/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        const resultDiv = document.getElementById('catalogItemResult');
+        resultDiv.innerHTML = `<strong>Created:</strong> ${escapeHtml(JSON.stringify(data, null, 2))}`;
+        resultDiv.classList.remove('hidden');
+        if (response.ok) {
+            document.getElementById('catalogItemForm').reset();
+            loadUserCollections();
+        }
+    } catch (error) {
+        const resultDiv = document.getElementById('catalogItemResult');
+        resultDiv.innerHTML = `<strong>Error:</strong> ${escapeHtml(error.message)}`;
+        resultDiv.classList.remove('hidden');
+    }
+}
+
 function showComingSoon() {
     alert('✨ This feature is coming soon! Stay tuned.');
 }

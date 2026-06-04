@@ -17,11 +17,14 @@ public class ImageMatchService {
 
         JSONArray candidates = MediaStore.findSimilarItems(fingerprint, textHint);
 
+        String ocrText = (textHint == null || textHint.isBlank()) ? "Unknown" : textHint.trim();
         JSONObject response = new JSONObject();
         response.put("fingerprint", fingerprint);
+        response.put("ocrText", ocrText);
         response.put("textHint", textHint);
         response.put("candidates", candidates);
         response.put("strategy", "hash-and-text-hint");
+        response.put("matchStatus", candidates.length() > 0 ? "verified" : "fallback-create-item");
         return response;
     }
 
