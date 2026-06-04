@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - My Collections</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dashboard Container -->
+        <div class="dashboard-container">
+            <div class="breadcrumb">
+                <a href="dashboard.html" class="breadcrumb-link">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <div class="header-with-actions">
+                    <div>
+                        <h1>📚 My Collection</h1>
+                        <p>Manage and organize your physical media collection</p>
+                    </div>
+                    <a href="add-item.html" class="btn btn-primary">+ Add New Item</a>
+                </div>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- Collection Stats -->
+                <div class="collection-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalItems">0</div>
+                        <div class="stat-label">Total Items</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalValue">$0.00</div>
+                        <div class="stat-label">Collection Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="mediaTypes">0</div>
+                        <div class="stat-label">Media Types</div>
+                    </div>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="collection-controls">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="🔍 Search items by title, artist, or description..."
+                        class="search-box"
+                    >
+                    
+                    <div class="filter-controls">
+                        <select id="filterMediaType" class="filter-select">
+                            <option value="">All Media Types</option>
+                            <option value="Book">📖 Books</option>
+                            <option value="Vinyl">🎵 Vinyl Records</option>
+                            <option value="CD">💿 CDs</option>
+                            <option value="DVD">🎬 DVDs</option>
+                            <option value="Blu-ray">📀 Blu-rays</option>
+                            <option value="Cassette">📼 Cassettes</option>
+                            <option value="Video Game">🎮 Video Games</option>
+                            <option value="Collectible">✨ Collectibles</option>
+                        </select>
+
+                        <select id="sortBy" class="filter-select">
+                            <option value="dateAdded">Newest First</option>
+                            <option value="title">Title (A-Z)</option>
+                            <option value="artistAuthor">Artist/Author (A-Z)</option>
+                            <option value="releaseDate">Release Date (Newest)</option>
+                            <option value="estimatedValue">Value (High to Low)</option>
+                            <option value="condition">Condition</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Items Container -->
+                <div id="collectionContainer" class="collection-container">
+                    <p class="empty-message">Loading your collection...</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- Item Detail Modal -->
+        <div id="itemModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle"></h2>
+                    <button class="modal-close" onclick="closeItemModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeItemModal()">Close</button>
+                    <button class="btn btn-primary" onclick="editCurrentItem()">Edit</button>
+                    <button class="btn btn-error" onclick="deleteCurrentItem()">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion | Backend: <code>localhost:8080</code></p>
+        </footer>
+    </div>
+
+    <script src="collection.js"></script>
+</body>
+</html>

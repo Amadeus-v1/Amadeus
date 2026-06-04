@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dashboard Container -->
+        <div class="dashboard-container">
+            <header class="dashboard-header">
+                <h1>My Collections</h1>
+                <p>Manage your collection and connect with other collectors</p>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- Quick Actions -->
+                <section class="quick-actions">
+                    <button class="action-card" id="testApiBtn">
+                        <span class="action-icon">🧪</span>
+                        <span class="action-title">Test API</span>
+                        <span class="action-desc">Test backend endpoints</span>
+                    </button>
+                    <button class="action-card" id="viewCollectionsBtn">
+                        <span class="action-icon">📚</span>
+                        <span class="action-title">View Collections</span>
+                        <span class="action-desc">Browse your items</span>
+                    </button>
+                    <button class="action-card" id="browseMarketplaceBtn">
+                        <span class="action-icon">🛍️</span>
+                        <span class="action-title">Marketplace</span>
+                        <span class="action-desc">Explore listings</span>
+                    </button>
+                    <button class="action-card" id="connectFriendsBtn">
+                        <span class="action-icon">👥</span>
+                        <span class="action-title">Friends</span>
+                        <span class="action-desc">Manage connections</span>
+                    </button>
+                </section>
+
+                <!-- API Tester Section -->
+                <section id="apiTesterSection" class="feature-section hidden">
+                    <h2>API Tester</h2>
+                    
+                    <div class="api-endpoints">
+                        <div class="endpoint-card">
+                            <h3>/api/hello</h3>
+                            <form class="endpoint-form" id="helloForm">
+                                <input type="text" placeholder="Enter name" id="helloName" required>
+                                <button type="submit" class="btn btn-primary">Test</button>
+                            </form>
+                            <div id="helloResult" class="endpoint-result hidden"></div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <h3>/api/return</h3>
+                            <form class="endpoint-form" id="returnForm">
+                                <textarea placeholder="key1=value1&key2=value2" id="returnParams" rows="3"></textarea>
+                                <button type="submit" class="btn btn-primary">Test</button>
+                            </form>
+                            <div id="returnResult" class="endpoint-result hidden"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="closeApiTester()">Close</button>
+                </section>
+
+                <!-- Collections Section -->
+                <section id="collectionsSection" class="feature-section hidden">
+                    <h2>Your Collections</h2>
+                    <div id="collectionsList" class="collections-list">
+                        <p class="empty-message">No collections yet</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="closeCollections()">Close</button>
+                </section>
+
+                <!-- Main Dashboard Content -->
+                <section id="mainContent" class="feature-section">
+                    <div class="welcome-card">
+                        <h2>Welcome to Amadeus! 🎉</h2>
+                        <p>Your personal collection management and marketplace platform.</p>
+                        <ul class="features-list">
+                            <li>📚 Organize and manage your collections</li>
+                            <li>👥 Connect with other collectors and share your passion</li>
+                            <li>🛍️ Buy and sell items in our marketplace</li>
+                            <li>🔍 Search and discover new items</li>
+                            <li>🖼️ Upload and showcase your collections</li>
+                        </ul>
+                        <p style="margin-top: 20px; color: #666;">
+                            Use the buttons above to get started!
+                        </p>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion | Backend: <code>localhost:8080</code></p>
+        </footer>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
