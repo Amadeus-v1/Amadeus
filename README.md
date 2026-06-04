@@ -6,6 +6,7 @@ This project now includes:
 - physical media catalog/search endpoints
 - user collection add/list endpoints
 - friend follow and friend-collection viewing endpoints
+- barcode scanner integration for quick item lookup
 - initial backend documentation in back-end/Server/docs/BACKEND_API.md
 
 ## Next priority
@@ -20,3 +21,4 @@ See back-end/Server/docs/MARKETPLACE_API.md for the API contract.
 ## Backend foundations now included
 - auth session and refresh-token primitives: back-end/Server/docs/AUTH_API.md
 - image scanning / catalog matching foundation: back-end/Server/docs/IMAGE_SCANNING_API.md
+- barcode scanner for quick item lookup: back-end/Server/docs/BARCODE_API.md

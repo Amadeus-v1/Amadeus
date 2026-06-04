@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('barcodeBtn').addEventListener('click', () => {
+        window.location.href = 'barcode.html';
+    });
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+        window.location.href = 'add-item.html';
+    });
     document.getElementById('testApiBtn').addEventListener('click', showApiTester);
     document.getElementById('viewCollectionsBtn').addEventListener('click', () => {
         window.location.href = 'collection.html';

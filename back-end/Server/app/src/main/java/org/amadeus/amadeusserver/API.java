@@ -32,6 +32,8 @@ public class API {
         server.createContext("/api/catalog/search", addCORSHeaders(ClientCom::handleCatalogSearchRequest));
         server.createContext("/api/collection/add", addCORSHeaders(ClientCom::handleCollectionAddRequest));
         server.createContext("/api/collection/list", addCORSHeaders(ClientCom::handleCollectionListRequest));
+        server.createContext("/api/collection/update", addCORSHeaders(ClientCom::handleCollectionUpdateRequest));
+        server.createContext("/api/collection/delete", addCORSHeaders(ClientCom::handleCollectionDeleteRequest));
         server.createContext("/api/friends/add", addCORSHeaders(ClientCom::handleFriendsAddRequest));
         server.createContext("/api/friends/list", addCORSHeaders(ClientCom::handleFriendsListRequest));
         server.createContext("/api/friends/collections", addCORSHeaders(ClientCom::handleFriendsCollectionsRequest));
@@ -41,6 +43,7 @@ public class API {
         server.createContext("/api/auth/session", addCORSHeaders(ClientCom::handleAuthCreateSessionRequest));
         server.createContext("/api/auth/refresh", addCORSHeaders(ClientCom::handleAuthRefreshRequest));
         server.createContext("/api/catalog/scan", addCORSHeaders(ClientCom::handleCatalogScanRequest));
+        server.createContext("/api/catalog/barcode", addCORSHeaders(ClientCom::handleBarcodeSearchRequest));
         server.createContext("/api/user/create", addCORSHeaders(ClientCom::handleUserCreateRequest));
         server.createContext("/api/user/login", addCORSHeaders(ClientCom::handleUserLoginRequest));
 

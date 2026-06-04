@@ -71,9 +71,9 @@ function displayItems(items) {
     }
 
     container.innerHTML = items.map(item => `
-        <div class="collection-item-card" onclick="openItemModal('${item.id}')">
-            <div class="item-media-icon">${getMediaIcon(item.mediaType)}</div>
-            <div class="item-content">
+        <div class="collection-item-card">
+            <div class="item-media-icon" onclick="openItemModal('${item.id}')" style="cursor: pointer;">${getMediaIcon(item.mediaType)}</div>
+            <div class="item-content" onclick="openItemModal('${item.id}')" style="cursor: pointer;">
                 <h3>${escapeHtml(item.title)}</h3>
                 ${item.artistAuthor ? `<p class="item-artist">${escapeHtml(item.artistAuthor)}</p>` : ''}
                 <div class="item-meta">
@@ -84,6 +84,9 @@ function displayItems(items) {
                     <span class="item-value">$${parseFloat(item.estimatedValue || 0).toFixed(2)}</span>
                     <span class="item-qty">Qty: ${item.quantity}</span>
                 </div>
+            </div>
+            <div class="item-actions">
+                <a href="edit-item.html?id=${item.id}" class="btn-icon" title="Edit item">✏️</a>
             </div>
         </div>
     `).join('');

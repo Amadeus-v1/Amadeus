@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Barcode Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .scanner-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .scanner-input-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .barcode-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #barcodeInput {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #barcodeInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .scan-button {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .scan-button:hover {
+            background: #5568d3;
+        }
+
+        .scan-button:active {
+            transform: scale(0.98);
+        }
+
+        .camera-toggle {
+            padding: 0.75rem 1.5rem;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .camera-toggle:hover {
+            background: #e0e0e0;
+        }
+
+        .camera-toggle.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .scanner-status {
+            text-align: center;
+            color: #666;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .camera-section {
+            display: none;
+            margin-bottom: 2rem;
+        }
+
+        .camera-section.active {
+            display: block;
+        }
+
+        #cameraVideo {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+            margin-bottom: 1rem;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .camera-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .camera-btn.capture {
+            background: #10b981;
+            color: white;
+        }
+
+        .camera-btn.capture:hover {
+            background: #059669;
+        }
+
+        .camera-btn.stop {
+            background: #ef4444;
+            color: white;
+        }
+
+        .camera-btn.stop:hover {
+            background: #dc2626;
+        }
+
+        .scanner-results {
+            display: none;
+        }
+
+        .scanner-results.active {
+            display: block;
+        }
+
+        .result-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-cover {
+            width: 80px;
+            height: 120px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .result-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-artist {
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-label {
+            color: #999;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .action-btn.add {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.add:hover {
+            background: #5568d3;
+        }
+
+        .action-btn.clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .action-btn.clear:hover {
+            background: #e0e0e0;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            background: #f8f9fa;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dashboard Container -->
+        <div class="dashboard-container">
+            <div class="breadcrumb">
+                <a href="dashboard.html" class="breadcrumb-link">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <h1>📱 Barcode Scanner</h1>
+                <p>Scan or enter a barcode to find and add media to your collection</p>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="scanner-container">
+                    <!-- Error and Success Messages -->
+                    <div id="errorMessage" class="error-message"></div>
+                    <div id="successMessage" class="success-message"></div>
+
+                    <!-- Scanner Input Section -->
+                    <div class="scanner-input-section">
+                        <h2>📷 Scanner Input</h2>
+                        
+                        <div class="barcode-input-group">
+                            <input 
+                                type="text" 
+                                id="barcodeInput" 
+                                placeholder="Enter or scan barcode (ISBN, UPC, EAN)..."
+                                autocomplete="off"
+                            >
+                            <button id="scanButton" class="scan-button">Search</button>
+                        </div>
+
+                        <div class="scanner-status">
+                            <p>💡 Tip: Place your cursor in the input field and scan, or type manually. Common formats: ISBN (books), UPC/EAN (media)</p>
+                        </div>
+                    </div>
+
+                    <!-- Camera Section (Optional) -->
+                    <div id="cameraSection" class="camera-section">
+                        <h2>📹 Camera Capture</h2>
+                        <video id="cameraVideo" playsinline></video>
+                        <div class="camera-controls">
+                            <button id="captureButton" class="camera-btn capture">📸 Capture Barcode</button>
+                            <button id="stopCameraButton" class="camera-btn stop">❌ Stop Camera</button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="resultsSection" class="scanner-results">
+                        <h2>🔍 Search Results</h2>
+                        <div id="resultsList"></div>
+                    </div>
+
+                    <!-- No Results Message -->
+                    <div id="noResults" class="no-results" style="display: none;">
+                        <p>No items found for this barcode.</p>
+                        <p>Would you like to <a href="add-item.html" style="color: #667eea; text-decoration: none; font-weight: 600;">add this item manually</a>?</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="barcode.js"></script>
+</body>
+</html>
