@@ -226,22 +226,34 @@ public class ClientCom {
             return;
         }
 
-        String userId = requestJson.optString("userId", "");
-        String title = requestJson.optString("title", "");
-        if (userId.isBlank() || title.isBlank()) {
-            sendError(exchange, 400, "Missing userId or title");
-            return;
+        try {
+            String userId = requestJson.optString("userId", "");
+            String title = requestJson.optString("title", "");
+            if (userId.isBlank() || title.isBlank()) {
+                sendError(exchange, 400, "Missing userId or title");
+                return;
+            }
+
+            System.out.println("[CollectionAdd] Adding item: " + title + " for user: " + userId);
+            
+            JSONObject item = MediaStore.addItem(requestJson);
+            System.out.println("[CollectionAdd] Item created with ID: " + item.optString("id"));
+            
+            MediaStore.addToCollection(userId, item.getString("id"), requestJson.optJSONObject("collection") != null
+                    ? requestJson.getJSONObject("collection")
+                    : new JSONObject());
+            
+            System.out.println("[CollectionAdd] Item added to collection successfully");
+
+            JSONObject response = new JSONObject();
+            response.put("message", "Item added to collection");
+            response.put("item", item);
+            sendJsonResponse(exchange, 201, response);
+        } catch (Exception e) {
+            System.err.println("[CollectionAdd] Error adding item: " + e.getMessage());
+            e.printStackTrace();
+            sendError(exchange, 500, "Error adding item: " + e.getMessage());
         }
-
-        JSONObject item = MediaStore.addItem(requestJson);
-        MediaStore.addToCollection(userId, item.getString("id"), requestJson.optJSONObject("collection") != null
-                ? requestJson.getJSONObject("collection")
-                : new JSONObject());
-
-        JSONObject response = new JSONObject();
-        response.put("message", "Item added to collection");
-        response.put("item", item);
-        sendJsonResponse(exchange, 201, response);
     }
 
     public static void handleCollectionListRequest(HttpExchange exchange) throws IOException {
@@ -260,6 +272,83 @@ public class ClientCom {
         response.put("userId", userId);
         response.put("items", MediaStore.listCollection(userId));
         sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleCollectionUpdateRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        try {
+            String itemId = requestJson.optString("itemId", "");
+            String userId = requestJson.optString("userId", "");
+            
+            if (itemId.isBlank() || userId.isBlank()) {
+                sendError(exchange, 400, "Missing itemId or userId");
+                return;
+            }
+
+            System.out.println("[CollectionUpdate] Updating item: " + itemId + " for user: " + userId);
+            
+            JSONObject updatedItem = MediaStore.updateItem(itemId, requestJson);
+            System.out.println("[CollectionUpdate] Item updated successfully");
+
+            JSONObject response = new JSONObject();
+            response.put("message", "Item updated successfully");
+            response.put("item", updatedItem);
+            sendJsonResponse(exchange, 200, response);
+        } catch (Exception e) {
+            System.err.println("[CollectionUpdate] Error updating item: " + e.getMessage());
+            e.printStackTrace();
+            sendError(exchange, 500, "Error updating item: " + e.getMessage());
+        }
+    }
+
+    public static void handleCollectionDeleteRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        try {
+            String itemId = requestJson.optString("itemId", "");
+            String userId = requestJson.optString("userId", "");
+            
+            if (itemId.isBlank() || userId.isBlank()) {
+                sendError(exchange, 400, "Missing itemId or userId");
+                return;
+            }
+
+            System.out.println("[CollectionDelete] Deleting item: " + itemId + " for user: " + userId);
+            
+            MediaStore.deleteFromCollection(userId, itemId);
+            System.out.println("[CollectionDelete] Item deleted successfully");
+
+            JSONObject response = new JSONObject();
+            response.put("message", "Item deleted from collection");
+            sendJsonResponse(exchange, 200, response);
+        } catch (Exception e) {
+            System.err.println("[CollectionDelete] Error deleting item: " + e.getMessage());
+            e.printStackTrace();
+            sendError(exchange, 500, "Error deleting item: " + e.getMessage());
+        }
     }
 
     public static void handleFriendsAddRequest(HttpExchange exchange) throws IOException {
@@ -463,6 +552,33 @@ public class ClientCom {
 
         JSONObject analysis = ImageMatchService.analyze(base64Image, textHint);
         sendJsonResponse(exchange, 200, analysis);
+    }
+
+    public static void handleBarcodeSearchRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String barcode = requestJson.optString("barcode", "").trim();
+        if (barcode.isBlank()) {
+            sendError(exchange, 400, "Missing barcode");
+            return;
+        }
+
+        JSONObject result = BarcodeService.searchByBarcode(barcode);
+        
+        // Return 200 even if not found, but include success flag
+        int statusCode = result.optBoolean("success", false) ? 200 : 404;
+        sendJsonResponse(exchange, statusCode, result);
     }
 
     public static void handleUserLoginRequest(HttpExchange exchange) throws IOException {

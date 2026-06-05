@@ -197,6 +197,90 @@ public class MediaStore {
         }
     }
 
+    public static JSONObject updateItem(String itemId, JSONObject updates) {
+        try {
+            initialize();
+            String sql = """
+                    UPDATE media_items
+                    SET title = ?, artist = ?, mediaType = ?, format = ?, year = ?, barcode = ?, coverUrl = ?, notes = ?
+                    WHERE id = ?;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, updates.optString("title", ""));
+                statement.setString(2, updates.optString("artist", ""));
+                statement.setString(3, updates.optString("mediaType", ""));
+                statement.setString(4, updates.optString("format", ""));
+                statement.setInt(5, updates.optInt("year", 0));
+                statement.setString(6, updates.optString("barcode", ""));
+                statement.setString(7, updates.optString("coverUrl", ""));
+                statement.setString(8, updates.optString("notes", ""));
+                statement.setString(9, itemId);
+                
+                int rowsUpdated = statement.executeUpdate();
+                if (rowsUpdated == 0) {
+                    throw new RuntimeException("Item not found: " + itemId);
+                }
+            }
+
+            // Return the updated item
+            return getItemById(itemId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update media item", e);
+        }
+    }
+
+    public static JSONObject getItemById(String itemId) {
+        try {
+            initialize();
+            String sql = """
+                    SELECT id, title, artist, mediaType, format, year, barcode, coverUrl, notes
+                    FROM media_items
+                    WHERE id = ?;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, itemId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        JSONObject item = new JSONObject();
+                        item.put("id", resultSet.getString("id"));
+                        item.put("title", resultSet.getString("title"));
+                        item.put("artist", resultSet.getString("artist"));
+                        item.put("mediaType", resultSet.getString("mediaType"));
+                        item.put("format", resultSet.getString("format"));
+                        item.put("year", resultSet.getInt("year"));
+                        item.put("barcode", resultSet.getString("barcode"));
+                        item.put("coverUrl", resultSet.getString("coverUrl"));
+                        item.put("notes", resultSet.getString("notes"));
+                        return item;
+                    }
+                }
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to get media item", e);
+        }
+    }
+
+    public static void deleteFromCollection(String userId, String itemId) {
+        try {
+            initialize();
+            String sql = """
+                    DELETE FROM collection_items
+                    WHERE userId = ? AND itemId = ?;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                statement.setString(2, itemId);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete item from collection", e);
+        }
+    }
+
     private static String downloadCoverAsset(String itemId, String coverUrl) throws IOException {
         Path dir = Path.of("covers");
         Files.createDirectories(dir);
