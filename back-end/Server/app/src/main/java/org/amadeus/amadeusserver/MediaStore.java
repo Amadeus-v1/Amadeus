@@ -14,7 +14,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -55,6 +57,8 @@ public class MediaStore {
                     conditionLabel TEXT,
                     ownIt INTEGER DEFAULT 1,
                     notes TEXT,
+                    quantity INTEGER DEFAULT 1,
+                    estimatedValue REAL DEFAULT 0.0,
                     addedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (userId, itemId)
                 );
@@ -63,6 +67,32 @@ public class MediaStore {
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.execute(mediaSql);
             statement.execute(collectionSql);
+            
+            // Migration: Add columns if they don't exist
+            addColumnIfNotExists(connection, "collection_items", "quantity", "INTEGER", "1");
+            addColumnIfNotExists(connection, "collection_items", "estimatedValue", "REAL", "0.0");
+        }
+    }
+
+    private static void addColumnIfNotExists(Connection conn, String table, String column, String type, String defaultValue) {
+        try {
+            Set<String> columns = new HashSet<>();
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + table + ")")) {
+                while (rs.next()) {
+                    columns.add(rs.getString("name").toLowerCase());
+                }
+            }
+            
+            if (!columns.contains(column.toLowerCase())) {
+                try (Statement stmt = conn.createStatement()) {
+                    String sql = "ALTER TABLE " + table + " ADD COLUMN " + column + " " + type + " DEFAULT " + defaultValue + ";";
+                    stmt.execute(sql);
+                    System.out.println("[Migration] Successfully added column " + column + " to " + table);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[Migration] Error checking/adding column " + column + ": " + e.getMessage());
         }
     }
 
@@ -113,10 +143,19 @@ public class MediaStore {
             initialize();
             String sql = """
                     INSERT INTO media_items (id, title, artist, mediaType, format, year, barcode, coverUrl, coverPath, coverHash, ocrHint, notes, source, isTestPress)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        title = excluded.title,
+                        artist = excluded.artist,
+                        mediaType = excluded.mediaType,
+                        format = excluded.format,
+                        year = excluded.year,
+                        barcode = excluded.barcode,
+                        coverUrl = excluded.coverUrl,
+                        notes = excluded.notes;
                     """;
 
-            String id = item.optString("id", java.util.UUID.randomUUID().toString());
+            String id = item.optString("id", item.optString("itemId", java.util.UUID.randomUUID().toString()));
             item.put("id", id);
 
             String coverPath = null;
@@ -138,26 +177,23 @@ public class MediaStore {
             }
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, item.getString("id"));
+                statement.setString(1, id);
                 statement.setString(2, item.optString("title", ""));
-                statement.setString(3, item.optString("artist", ""));
-                statement.setString(4, item.optString("mediaType", "record"));
+                statement.setString(3, item.optString("artist", item.optString("artistAuthor", "")));
+                statement.setString(4, item.optString("mediaType", "Other"));
                 statement.setString(5, item.optString("format", ""));
-                statement.setInt(6, item.optInt("year", 0));
-                statement.setString(7, item.optString("barcode", ""));
+                statement.setInt(6, item.optInt("year", item.optInt("releaseYear", 0)));
+                statement.setString(7, item.optString("barcode", item.optString("isbn", "")));
                 statement.setString(8, coverUrl);
                 statement.setString(9, coverPath);
                 statement.setString(10, coverHash);
                 statement.setString(11, ocrHint);
-                statement.setString(12, item.optString("notes", ""));
+                statement.setString(12, item.optString("notes", item.optString("description", "")));
                 statement.setString(13, item.optString("source", "manual"));
                 statement.setInt(14, item.optBoolean("isTestPress", false) ? 1 : 0);
                 statement.executeUpdate();
             }
 
-            item.put("coverPath", coverPath);
-            item.put("coverHash", coverHash);
-            item.put("ocrHint", ocrHint);
             return item;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add media item", e);
@@ -168,30 +204,30 @@ public class MediaStore {
         try {
             initialize();
             String sql = """
-                    INSERT INTO collection_items (userId, itemId, conditionLabel, ownIt, notes)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO collection_items (userId, itemId, conditionLabel, ownIt, notes, quantity, estimatedValue)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(userId, itemId) DO UPDATE SET
                         conditionLabel = excluded.conditionLabel,
                         ownIt = excluded.ownIt,
-                        notes = excluded.notes;
+                        notes = excluded.notes,
+                        quantity = excluded.quantity,
+                        estimatedValue = excluded.estimatedValue;
                     """;
+
+            System.out.println("[CollectionAdd] Storing details: " + details.toString());
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, userId);
                 statement.setString(2, itemId);
-                statement.setString(3, details.optString("conditionLabel", ""));
+                statement.setString(3, details.optString("condition", details.optString("conditionLabel", "")));
                 statement.setInt(4, details.optBoolean("ownIt", true) ? 1 : 0);
-                statement.setString(5, details.optString("notes", ""));
+                statement.setString(5, details.optString("description", details.optString("notes", "")));
+                statement.setInt(6, details.optInt("quantity", 1));
+                statement.setDouble(7, details.optDouble("estimatedValue", 0.0));
                 statement.executeUpdate();
             }
 
-            JSONObject result = new JSONObject();
-            result.put("userId", userId);
-            result.put("itemId", itemId);
-            result.put("conditionLabel", details.optString("conditionLabel", ""));
-            result.put("ownIt", details.optBoolean("ownIt", true));
-            result.put("notes", details.optString("notes", ""));
-            return result;
+            return details;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add item to collection", e);
         }
@@ -200,59 +236,83 @@ public class MediaStore {
     public static JSONObject updateItem(String itemId, JSONObject updates) {
         try {
             initialize();
-            String sql = """
+            
+            // 1. Update media_items table
+            String mediaSql = """
                     UPDATE media_items
                     SET title = ?, artist = ?, mediaType = ?, format = ?, year = ?, barcode = ?, coverUrl = ?, notes = ?
                     WHERE id = ?;
                     """;
 
-            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(mediaSql)) {
                 statement.setString(1, updates.optString("title", ""));
-                statement.setString(2, updates.optString("artist", ""));
+                statement.setString(2, updates.optString("artist", updates.optString("artistAuthor", "")));
                 statement.setString(3, updates.optString("mediaType", ""));
                 statement.setString(4, updates.optString("format", ""));
                 statement.setInt(5, updates.optInt("year", 0));
                 statement.setString(6, updates.optString("barcode", ""));
                 statement.setString(7, updates.optString("coverUrl", ""));
-                statement.setString(8, updates.optString("notes", ""));
+                statement.setString(8, updates.optString("notes", updates.optString("description", "")));
                 statement.setString(9, itemId);
-                
-                int rowsUpdated = statement.executeUpdate();
-                if (rowsUpdated == 0) {
-                    throw new RuntimeException("Item not found: " + itemId);
+                statement.executeUpdate();
+            }
+
+            // 2. Update collection_items table if userId is present
+            String userId = updates.optString("userId");
+            if (userId != null && !userId.isBlank()) {
+                String collectionSql = """
+                        UPDATE collection_items
+                        SET conditionLabel = ?, quantity = ?, estimatedValue = ?, notes = ?
+                        WHERE userId = ? AND itemId = ?;
+                        """;
+                try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(collectionSql)) {
+                    statement.setString(1, updates.optString("condition", ""));
+                    statement.setInt(2, updates.optInt("quantity", 1));
+                    statement.setDouble(3, updates.optDouble("estimatedValue", 0.0));
+                    statement.setString(4, updates.optString("notes", updates.optString("description", "")));
+                    statement.setString(5, userId);
+                    statement.setString(6, itemId);
+                    statement.executeUpdate();
                 }
             }
 
-            // Return the updated item
-            return getItemById(itemId);
+            return getItemById(itemId, userId);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update media item", e);
         }
     }
 
-    public static JSONObject getItemById(String itemId) {
+    public static JSONObject getItemById(String itemId, String userId) {
         try {
             initialize();
             String sql = """
-                    SELECT id, title, artist, mediaType, format, year, barcode, coverUrl, notes
-                    FROM media_items
-                    WHERE id = ?;
+                    SELECT m.id, m.title, m.artist, m.mediaType, m.format, m.year, m.barcode, m.coverUrl, m.notes as media_notes,
+                           c.conditionLabel, c.quantity, c.estimatedValue, c.notes as collection_notes
+                    FROM media_items m
+                    LEFT JOIN collection_items c ON m.id = c.itemId AND c.userId = ?
+                    WHERE m.id = ?;
                     """;
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, itemId);
+                statement.setString(1, userId);
+                statement.setString(2, itemId);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         JSONObject item = new JSONObject();
                         item.put("id", resultSet.getString("id"));
                         item.put("title", resultSet.getString("title"));
                         item.put("artist", resultSet.getString("artist"));
+                        item.put("artistAuthor", resultSet.getString("artist"));
                         item.put("mediaType", resultSet.getString("mediaType"));
                         item.put("format", resultSet.getString("format"));
                         item.put("year", resultSet.getInt("year"));
                         item.put("barcode", resultSet.getString("barcode"));
                         item.put("coverUrl", resultSet.getString("coverUrl"));
-                        item.put("notes", resultSet.getString("notes"));
+                        item.put("condition", resultSet.getString("conditionLabel"));
+                        item.put("quantity", resultSet.getInt("quantity"));
+                        item.put("estimatedValue", resultSet.getDouble("estimatedValue"));
+                        item.put("notes", resultSet.getString("collection_notes"));
+                        item.put("description", resultSet.getString("collection_notes"));
                         return item;
                     }
                 }
@@ -380,7 +440,7 @@ public class MediaStore {
             initialize();
             String sql = """
                     SELECT m.id, m.title, m.artist, m.mediaType, m.format, m.year, m.barcode, m.coverUrl,
-                           c.conditionLabel, c.ownIt, c.notes, c.addedAt
+                           c.conditionLabel, c.ownIt, c.notes, c.addedAt, c.quantity, c.estimatedValue
                     FROM collection_items c
                     JOIN media_items m ON m.id = c.itemId
                     WHERE c.userId = ?
@@ -396,15 +456,20 @@ public class MediaStore {
                         item.put("id", resultSet.getString("id"));
                         item.put("title", resultSet.getString("title"));
                         item.put("artist", resultSet.getString("artist"));
+                        item.put("artistAuthor", resultSet.getString("artist"));
                         item.put("mediaType", resultSet.getString("mediaType"));
                         item.put("format", resultSet.getString("format"));
                         item.put("year", resultSet.getInt("year"));
                         item.put("barcode", resultSet.getString("barcode"));
                         item.put("coverUrl", resultSet.getString("coverUrl"));
+                        item.put("condition", resultSet.getString("conditionLabel"));
                         item.put("conditionLabel", resultSet.getString("conditionLabel"));
                         item.put("ownIt", resultSet.getInt("ownIt") == 1);
                         item.put("notes", resultSet.getString("notes"));
+                        item.put("description", resultSet.getString("notes"));
                         item.put("addedAt", resultSet.getString("addedAt"));
+                        item.put("quantity", resultSet.getInt("quantity"));
+                        item.put("estimatedValue", resultSet.getDouble("estimatedValue"));
                         items.put(item);
                     }
                     return items;
