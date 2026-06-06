@@ -15,6 +15,13 @@
                     <h1>🎭 Amadeus</h1>
                 </div>
                 <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <span id="userGreeting" class="nav-user">Welcome!</span>
                     <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                 </div>
@@ -23,48 +30,47 @@
 
         <!-- Main Dashboard Container -->
         <div class="dashboard-container">
-            <div class="breadcrumb">
-                <a href="dashboard.html" class="breadcrumb-link">← Back to Dashboard</a>
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
             </div>
 
             <header class="dashboard-header">
-                <div class="header-with-actions">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
                     <div>
                         <h1>📚 My Collection</h1>
                         <p>Manage and organize your physical media collection</p>
                     </div>
-                    <a href="add-item.html" class="btn btn-primary">+ Add New Item</a>
+                    <a href="add-item.html" class="btn btn-primary" style="text-decoration: none;">+ Add New Item</a>
                 </div>
             </header>
 
             <main class="dashboard-main">
                 <!-- Collection Stats -->
-                <div class="collection-stats">
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalItems">0</div>
-                        <div class="stat-label">Total Items</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 48px;">
+                    <div class="feature-section" style="margin-bottom: 0; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);" id="totalItems">0</div>
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Total Items</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalValue">$0.00</div>
-                        <div class="stat-label">Collection Value</div>
+                    <div class="feature-section" style="margin-bottom: 0; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);" id="totalValue">$0.00</div>
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Collection Value</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="mediaTypes">0</div>
-                        <div class="stat-label">Media Types</div>
+                    <div class="feature-section" style="margin-bottom: 0; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);" id="mediaTypes">0</div>
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Media Types</div>
                     </div>
                 </div>
 
                 <!-- Filters and Search -->
-                <div class="collection-controls">
+                <div style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 48px;">
                     <input 
                         type="text" 
                         id="searchInput" 
                         placeholder="🔍 Search items by title, artist, or description..."
-                        class="search-box"
                     >
                     
-                    <div class="filter-controls">
-                        <select id="filterMediaType" class="filter-select">
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <select id="filterMediaType" style="flex: 1; min-width: 200px;">
                             <option value="">All Media Types</option>
                             <option value="Book">📖 Books</option>
                             <option value="Vinyl">🎵 Vinyl Records</option>
@@ -76,7 +82,7 @@
                             <option value="Collectible">✨ Collectibles</option>
                         </select>
 
-                        <select id="sortBy" class="filter-select">
+                        <select id="sortBy" style="flex: 1; min-width: 200px;">
                             <option value="dateAdded">Newest First</option>
                             <option value="title">Title (A-Z)</option>
                             <option value="artistAuthor">Artist/Author (A-Z)</option>
@@ -88,34 +94,32 @@
                 </div>
 
                 <!-- Items Container -->
-                <div id="collectionContainer" class="collection-container">
-                    <p class="empty-message">Loading your collection...</p>
+                <div id="collectionContainer" class="collections-list">
+                    <p style="text-align: center; color: var(--muted); padding: 40px;">Loading your collection...</p>
                 </div>
             </main>
         </div>
 
-        <!-- Item Detail Modal -->
-        <div id="itemModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modalTitle"></h2>
-                    <button class="modal-close" onclick="closeItemModal()">&times;</button>
-                </div>
-                <div class="modal-body" id="modalBody"></div>
-                <div class="modal-footer">
+        <!-- Item Detail Modal (Simplified Overlay for this UI) -->
+        <div id="itemModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+            <div class="feature-section" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: var(--card-bg); position: relative;">
+                <button onclick="closeItemModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text); font-size: 2rem; cursor: pointer;">&times;</button>
+                <h2 id="modalTitle" style="padding-right: 40px;"></h2>
+                <div id="modalBody" style="margin: 24px 0;"></div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button class="btn btn-secondary" onclick="closeItemModal()">Close</button>
                     <button class="btn btn-primary" onclick="editCurrentItem()">Edit</button>
-                    <button class="btn btn-error" onclick="deleteCurrentItem()">Delete</button>
+                    <button class="btn btn-secondary" style="color: #ff4444; border-color: #ff4444;" onclick="deleteCurrentItem()">Delete</button>
                 </div>
             </div>
         </div>
 
-        <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>🎭 Amadeus - Your Collection Companion | Backend: <code>localhost:8080</code></p>
+            <p>🎭 Amadeus - Your Collection Companion</p>
         </footer>
     </div>
 
+    <script src="theme.js"></script>
     <script src="collection.js"></script>
 </body>
 </html>

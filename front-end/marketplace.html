@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Marketplace</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <h1>🛍️ Marketplace</h1>
+                <p>Buy, sell, and trade items with other collectors</p>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="feature-section" style="text-align: center; padding: 60px 24px;">
+                    <div style="font-size: 4rem; margin-bottom: 24px;">✨</div>
+                    <h2 style="margin-bottom: 16px;">Marketplace is coming soon!</h2>
+                    <p style="color: var(--muted); max-width: 500px; margin: 0 auto 32px;">
+                        We're working hard to bring you a secure platform for trading your collectibles. 
+                        Stay tuned for updates!
+                    </p>
+                    <a href="dashboard.html" class="btn btn-primary">Return to Dashboard</a>
+                </div>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="marketplace.js"></script>
+</body>
+</html>

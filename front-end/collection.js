@@ -70,50 +70,64 @@ function displayItems(items) {
         return;
     }
 
-    container.innerHTML = items.map(item => `
-        <div class="collection-item-card">
-            <div class="item-media-icon" onclick="openItemModal('${item.id}')" style="cursor: pointer;">${getMediaIcon(item.mediaType)}</div>
-            <div class="item-content" onclick="openItemModal('${item.id}')" style="cursor: pointer;">
-                <h3>${escapeHtml(item.title)}</h3>
-                ${item.artistAuthor ? `<p class="item-artist">${escapeHtml(item.artistAuthor)}</p>` : ''}
-                <div class="item-meta">
-                    <span class="item-type">${item.mediaType}</span>
-                    <span class="item-condition">${item.condition}</span>
+    container.innerHTML = items.map(item => {
+        const hasCover = item.coverUrl && item.coverUrl.trim() !== '';
+        const mediaIcon = getMediaIcon(item.mediaType);
+        
+        return `
+            <div class="collection-item-card">
+                <div class="item-actions">
+                    <a href="edit-item.html?id=${item.id}" class="btn-icon" title="Edit item" style="text-decoration: none; font-size: 1rem;">✏️</a>
                 </div>
-                <div class="item-footer">
-                    <span class="item-value">$${parseFloat(item.estimatedValue || 0).toFixed(2)}</span>
-                    <span class="item-qty">Qty: ${item.quantity}</span>
+                <div class="item-media-icon" onclick="openItemModal('${item.id}')" style="cursor: pointer;">
+                    ${hasCover 
+                        ? `<img src="${item.coverUrl}" alt="${escapeHtml(item.title)}" onerror="this.parentElement.innerHTML='${mediaIcon}'">` 
+                        : mediaIcon
+                    }
+                </div>
+                <div class="item-content" onclick="openItemModal('${item.id}')" style="cursor: pointer;">
+                    <h3>${escapeHtml(item.title)}</h3>
+                    ${item.artistAuthor ? `<p class="item-artist">${escapeHtml(item.artistAuthor)}</p>` : ''}
+                    <div class="item-meta">
+                        <span class="item-type">${item.mediaType}</span>
+                        <span class="item-condition">${item.condition || 'N/A'}</span>
+                    </div>
+                    <div class="item-footer">
+                        <span class="item-value" style="color: var(--accent); font-weight: 800;">$${parseFloat(item.estimatedValue || 0).toFixed(2)}</span>
+                        <span class="item-qty" style="color: var(--text);">Qty: ${item.quantity || 1}</span>
+                    </div>
                 </div>
             </div>
-            <div class="item-actions">
-                <a href="edit-item.html?id=${item.id}" class="btn-icon" title="Edit item">✏️</a>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Display empty state
 function displayEmptyState() {
     const container = document.getElementById('collectionContainer');
     container.innerHTML = `
-        <div class="empty-collection">
+        <div class="empty-collection" style="text-align: center; padding: 48px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);">
             <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
-            <h3>No items in your collection yet</h3>
-            <p>Start by adding your first item to begin cataloging your collection.</p>
-            <a href="add-item.html" class="btn btn-primary">+ Add Your First Item</a>
+            <h3 style="color: var(--text);">No items in your collection yet</h3>
+            <p style="color: var(--text); margin-bottom: 24px;">Start by adding your first item to begin cataloging your collection.</p>
+            <a href="add-item.html" class="btn btn-primary" style="text-decoration: none;">+ Add Your First Item</a>
         </div>
     `;
 }
 
 // Update stats
 function updateStats() {
-    const totalItems = allItems.reduce((sum, item) => sum + item.quantity, 0);
-    const totalValue = allItems.reduce((sum, item) => sum + (item.estimatedValue || 0), 0);
-    const mediaTypes = new Set(allItems.map(item => item.mediaType)).size;
+    const totalItems = allItems.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+    const totalValue = allItems.reduce((sum, item) => sum + ((parseFloat(item.estimatedValue) || 0) * (parseInt(item.quantity) || 1)), 0);
+    const mediaTypesCount = new Set(allItems.map(item => item.mediaType)).size;
 
-    document.getElementById('totalItems').textContent = totalItems;
-    document.getElementById('totalValue').textContent = `$${totalValue.toFixed(2)}`;
-    document.getElementById('mediaTypes').textContent = mediaTypes;
+    const totalItemsEl = document.getElementById('totalItems');
+    const totalValueEl = document.getElementById('totalValue');
+    const mediaTypesEl = document.getElementById('mediaTypes');
+
+    if (totalItemsEl) totalItemsEl.textContent = totalItems;
+    if (totalValueEl) totalValueEl.textContent = `$${totalValue.toFixed(2)}`;
+    if (mediaTypesEl) mediaTypesEl.textContent = mediaTypesCount;
 }
 
 // Filter items
@@ -125,7 +139,8 @@ function filterItems() {
         const matchesSearch = !searchTerm || 
             item.title.toLowerCase().includes(searchTerm) ||
             (item.artistAuthor && item.artistAuthor.toLowerCase().includes(searchTerm)) ||
-            (item.description && item.description.toLowerCase().includes(searchTerm));
+            (item.description && item.description.toLowerCase().includes(searchTerm)) ||
+            (item.notes && item.notes.toLowerCase().includes(searchTerm));
         
         const matchesType = !mediaTypeFilter || item.mediaType === mediaTypeFilter;
 
@@ -151,14 +166,14 @@ function sortItems() {
             sorted.sort((a, b) => new Date(b.releaseDate || 0) - new Date(a.releaseDate || 0));
             break;
         case 'estimatedValue':
-            sorted.sort((a, b) => (b.estimatedValue || 0) - (a.estimatedValue || 0));
+            sorted.sort((a, b) => (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0));
             break;
         case 'condition':
-            sorted.sort((a, b) => a.condition.localeCompare(b.condition));
+            sorted.sort((a, b) => (a.condition || '').localeCompare(b.condition || ''));
             break;
         case 'dateAdded':
         default:
-            sorted.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+            sorted.sort((a, b) => new Date(b.addedAt || b.dateAdded || 0) - new Date(a.addedAt || a.dateAdded || 0));
             break;
     }
 
@@ -193,72 +208,22 @@ function openItemModal(itemId) {
 
     modalTitle.textContent = item.title;
     
+    const hasCover = item.coverUrl && item.coverUrl.trim() !== '';
+
     modalBody.innerHTML = `
-        <div class="modal-item-details">
-            <div class="detail-row">
-                <span class="detail-label">Media Type:</span>
-                <span class="detail-value">${item.mediaType}</span>
+        <div class="modal-item-details" style="color: var(--text);">
+            ${hasCover ? `<img src="${item.coverUrl}" alt="${escapeHtml(item.title)}" class="modal-image">` : ''}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div><strong>Media Type:</strong> ${item.mediaType}</div>
+                ${item.artistAuthor ? `<div><strong>Artist/Author:</strong> ${escapeHtml(item.artistAuthor)}</div>` : ''}
+                ${item.year ? `<div><strong>Year:</strong> ${item.year}</div>` : ''}
+                <div><strong>Condition:</strong> ${item.condition || 'N/A'}</div>
+                <div><strong>Quantity:</strong> ${item.quantity || 1}</div>
+                <div><strong>Estimated Value:</strong> $${parseFloat(item.estimatedValue || 0).toFixed(2)}</div>
+                ${item.format ? `<div><strong>Format:</strong> ${escapeHtml(item.format)}</div>` : ''}
+                ${item.barcode ? `<div><strong>Barcode:</strong> ${escapeHtml(item.barcode)}</div>` : ''}
+                ${item.notes || item.description ? `<div><strong>Notes:</strong> ${escapeHtml(item.notes || item.description)}</div>` : ''}
             </div>
-            ${item.artistAuthor ? `
-                <div class="detail-row">
-                    <span class="detail-label">Artist/Author:</span>
-                    <span class="detail-value">${escapeHtml(item.artistAuthor)}</span>
-                </div>
-            ` : ''}
-            ${item.releaseDate ? `
-                <div class="detail-row">
-                    <span class="detail-label">Release Date:</span>
-                    <span class="detail-value">${new Date(item.releaseDate).toLocaleDateString()}</span>
-                </div>
-            ` : ''}
-            ${item.genre ? `
-                <div class="detail-row">
-                    <span class="detail-label">Genre:</span>
-                    <span class="detail-value">${escapeHtml(item.genre)}</span>
-                </div>
-            ` : ''}
-            <div class="detail-row">
-                <span class="detail-label">Condition:</span>
-                <span class="detail-value">${item.condition}</span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Quantity:</span>
-                <span class="detail-value">${item.quantity}</span>
-            </div>
-            ${item.estimatedValue ? `
-                <div class="detail-row">
-                    <span class="detail-label">Estimated Value:</span>
-                    <span class="detail-value">$${parseFloat(item.estimatedValue).toFixed(2)}</span>
-                </div>
-            ` : ''}
-            ${item.purchasePrice ? `
-                <div class="detail-row">
-                    <span class="detail-label">Purchase Price:</span>
-                    <span class="detail-value">$${parseFloat(item.purchasePrice).toFixed(2)}</span>
-                </div>
-            ` : ''}
-            ${item.location ? `
-                <div class="detail-row">
-                    <span class="detail-label">Location:</span>
-                    <span class="detail-value">${escapeHtml(item.location)}</span>
-                </div>
-            ` : ''}
-            ${item.isSigned || item.isRare || item.isFirstEdition ? `
-                <div class="detail-row">
-                    <span class="detail-label">Special:</span>
-                    <span class="detail-value">
-                        ${item.isSigned ? '✍️ Signed ' : ''}
-                        ${item.isRare ? '🌟 Rare ' : ''}
-                        ${item.isFirstEdition ? '📌 First Edition' : ''}
-                    </span>
-                </div>
-            ` : ''}
-            ${item.description ? `
-                <div class="detail-row">
-                    <span class="detail-label">Notes:</span>
-                    <span class="detail-value">${escapeHtml(item.description)}</span>
-                </div>
-            ` : ''}
         </div>
     `;
 
@@ -274,8 +239,7 @@ function closeItemModal() {
 // Edit current item
 function editCurrentItem() {
     if (!currentItemId) return;
-    // TODO: Implement edit functionality
-    alert('Edit functionality coming soon!');
+    window.location.href = `edit-item.html?id=${currentItemId}`;
 }
 
 // Delete current item
@@ -309,6 +273,7 @@ async function deleteCurrentItem() {
 
 // Helper function to escape HTML
 function escapeHtml(text) {
+    if (!text) return '';
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -316,7 +281,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 
 // Close modal when clicking outside

@@ -4,137 +4,59 @@
 
 The barcode scanner is the fastest way to add items to your Amadeus collection!
 
-### Method 1: Direct Scanner Page
-1. From the **Dashboard**, click the **📱 Barcode Scanner** button
-2. Enter or scan a barcode into the text field
-3. Click **Search** or press **Enter**
-4. Review the item information
-5. Click **✓ Add to Collection** to add it
+### Method 1: Camera Scanner (Recommended)
+1. From the **Dashboard**, click the **📱 Barcode Scanner** button.
+2. Click **📷 Open Camera Scanner**.
+3. Grant camera permissions if prompted.
+4. Point your camera at the barcode. Once detected, the item details will be fetched automatically.
+5. Review the information and click **✓ Add to Collection**.
 
-### Method 2: From Add Item Form
-1. Go to **Add Item** page
-2. Look for the **⚡ Quick Barcode Lookup** box at the top
-3. Click **📱 Go to Barcode Scanner**
-4. Follow Method 1
+### Method 2: Manual Search
+1. Enter the barcode number into the "Manual Search" field.
+2. Click **Search** or press **Enter**.
+3. Review the item information and click **✓ Add to Collection**.
 
 ## Supported Barcode Types
 
-The barcode scanner supports several barcode formats:
+The barcode scanner supports several common barcode formats:
 
 | Format | Example | Common Items |
 |--------|---------|--------------|
-| ISBN-13 (Books) | 9780544720435 | Books |
-| ISBN-10 (Books) | 0544720431 | Older books |
-| UPC/EAN (Products) | 5099750066429 | CDs, DVDs, Games |
+| ISBN-13 | 9780544720435 | Books |
+| ISBN-10 | 0544720431 | Older books |
+| UPC/EAN | 5099750066429 | CDs, DVDs, Games |
 
 ## How to Scan
 
-### Option 1: Physical Barcode Scanner
-- Connect a barcode scanner device to your computer
-- Place cursor in the input field
-- Scan the barcode on your physical media
-- The barcode code appears automatically
-- Click **Search**
+### Option 1: Camera Scanner
+- Click the **📷 Open Camera Scanner** button.
+- Align the barcode within the live viewport.
+- The red "laser" line helps you position the code.
+- Scanning happens automatically when the code is in focus.
 
-### Option 2: Manual Entry
-- Click in the input field
-- Type the barcode number manually
-- Click **Search** or press **Enter**
+### Option 2: Physical Barcode Scanner
+- Connect a barcode scanner device to your computer.
+- Place your cursor in the "Manual Search" input field.
+- Scan the barcode on your physical media.
+- Click **Search**.
 
-## What Happens When You Search
-
-When you search for a barcode, Amadeus looks in three places in order:
-
-1. **Open Library** (for books with ISBN)
-2. **Open Food Facts** (for products with UPC/EAN)
-3. **Local Amadeus Catalog** (items you or other users added)
-
-The first match found is displayed with:
-- 📖 Title
-- 👤 Artist/Author
-- 📺 Media Type (Book, CD, DVD, etc.)
-- 📅 Year
-- 🎨 Cover image (if available)
-- 🏷️ Source (where it came from)
-
-## Not Found?
-
-If your barcode isn't found:
-- Click **Add Manually** to go to the manual add-item form
-- Or click **Scan Again** to try a different barcode
-- The item will be available for future scans once added
-
-## Adding to Your Collection
-
-Once you see the item details:
-
-1. Review the information
-   - Is the title correct?
-   - Is the media type correct?
-   - Do you need to edit any fields?
-
-2. Click **✓ Add to Collection**
-   - The item is added with the found information
-   - You'll be taken to your collection page
-   - You can edit details later if needed
+### Option 3: Manual Entry
+- Type the barcode number manually into the search field.
+- Click **Search**.
 
 ## Pro Tips
-
-- 📱 Use a **barcode scanner app** on your phone, then copy-paste into the input field
-- 📚 ISBN barcodes work best (most accurate data)
-- 🎬 DVDs and CDs often have multiple barcodes (UPC on back works great)
-- ✏️ You can always edit item details after adding
-- 🔄 Scan multiple items quickly without refreshing
-- 📷 Point your camera at the barcode you want to scan
+- 💡 **Lighting**: The camera scanner works best in well-lit environments. Avoid glares on glossy surfaces.
+- 📱 **Distance**: Hold the camera about 6-10 inches away from the barcode and wait for it to focus.
+- 🔄 **Batch Adding**: You can quickly scan multiple items by clicking "Try Another" after adding an item.
 
 ## Troubleshooting
+**"Unable to access camera"**
+- Ensure you've granted camera permissions in your browser settings.
+- Check if another application is using the camera.
 
 **"No item found"**
-- Check the barcode number for typos
-- Try an ISBN-13 for books (more likely to find)
-- Add it manually using the form
-
-**"Network error"**
-- Check your internet connection
-- Try again in a few moments
-- If it persists, add manually
-
-**"Item added but with wrong data"**
-- Click on the item in your collection to edit it
-- Fix any incorrect information
-- Save changes
-
-## What Gets Added
-
-When you add an item via barcode scan, it includes:
-
-- Title
-- Artist/Author (if available)
-- Media Type
-- Release Year (if available)
-- Cover Image (if available)
-- Barcode (for future reference)
-- Source (where data came from)
-
-You can add more details later:
-- Format (Hardcover, Deluxe Edition, etc.)
-- Condition (Mint, Good, Fair, etc.)
-- Purchase info (price, date, location)
-- Personal notes
-
-## Keyboard Shortcuts
-
-- **Enter** - Search (while input is focused)
-- **Ctrl+Shift+S** - Focus barcode input (if implemented)
-- **Escape** - Clear results (if implemented)
-
-## Next Steps
-
-After adding items:
-- View your **📚 Collection**
-- **👥 Add Friends** and view their collections
-- **🛍️ List items for sale** on the marketplace
-- **🔍 Search** for items by type
+- Double-check the barcode number for typos.
+- If the item is very new or rare, it might not be in our external databases yet. You can always use **Add Manually** to create the entry.
 
 ---
 

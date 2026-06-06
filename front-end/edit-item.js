@@ -33,9 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('editItemForm').addEventListener('submit', handleEditItem);
     document.getElementById('deleteBtn').addEventListener('click', handleDeleteItem);
 
+    // Live preview for cover URL
+    const coverUrlInput = document.getElementById('itemCoverUrl');
+    if (coverUrlInput) {
+        coverUrlInput.addEventListener('input', updateCoverPreview);
+    }
+
     // Load item data
     loadItemData();
 });
+
+// Update cover preview
+function updateCoverPreview() {
+    const url = document.getElementById('itemCoverUrl').value.trim();
+    const previewContainer = document.getElementById('coverPreviewContainer');
+    
+    if (url) {
+        previewContainer.innerHTML = `<img src="${url}" alt="Preview" style="max-height: 100%; max-width: 100%; border-radius: 4px;" onerror="this.parentElement.innerHTML='<span style=\'color: #ff4444; font-size: 0.8rem;\'>Invalid Image URL</span>'">`;
+    } else {
+        previewContainer.innerHTML = `<span style="color: var(--muted); font-size: 0.8rem;">Image Preview</span>`;
+    }
+}
 
 // Logout handler
 function logout() {
@@ -51,8 +69,16 @@ function logout() {
 function showFormMessage(message, type = 'success') {
     const messageEl = document.getElementById('formMessage');
     messageEl.textContent = message;
-    messageEl.className = `form-message ${type}`;
-    messageEl.classList.remove('hidden');
+    messageEl.className = `error-message ${type === 'success' ? '' : 'active'}`;
+    if (type === 'success') {
+        messageEl.style.backgroundColor = '#10b981';
+        messageEl.style.display = 'block';
+        messageEl.classList.remove('hidden');
+    } else {
+        messageEl.style.backgroundColor = '#ff4444';
+        messageEl.style.display = 'block';
+        messageEl.classList.remove('hidden');
+    }
     
     if (type === 'success') {
         setTimeout(() => {
@@ -69,18 +95,14 @@ function loadItemData() {
         .then(response => response.json())
         .then(data => {
             const items = data.items || [];
-            // Try to find the item in the collection
-            // Note: This is a workaround since we don't have a direct /get endpoint yet
             
-            // For now, redirect to collection if item not found
-            // In a full implementation, we'd fetch item details directly
-            if (!Array.isArray(items) || items.length === 0) {
-                showFormMessage('Item not found', 'error');
-            } else {
-                // Load the first item for demo purposes
-                // In production, this should search for the specific item ID
-                const item = items[0];
+            // Search for the specific item by ID
+            const item = items.find(i => i.id === currentItemId || i.itemId === currentItemId);
+            
+            if (item) {
                 populateForm(item);
+            } else {
+                showFormMessage('Item not found in your collection', 'error');
             }
         })
         .catch(error => {
@@ -93,12 +115,18 @@ function loadItemData() {
 function populateForm(item) {
     document.getElementById('itemTitle').value = item.title || '';
     document.getElementById('itemMediaType').value = item.mediaType || '';
-    document.getElementById('itemArtistAuthor').value = item.artist || '';
+    document.getElementById('itemArtistAuthor').value = item.artist || item.artistAuthor || '';
     document.getElementById('itemYear').value = item.year || '';
-    document.getElementById('itemDescription').value = item.notes || '';
+    document.getElementById('itemDescription').value = item.notes || item.description || '';
+    document.getElementById('itemCondition').value = item.condition || item.conditionLabel || '';
+    document.getElementById('itemQuantity').value = item.quantity || 1;
     document.getElementById('itemFormat').value = item.format || '';
+    document.getElementById('itemEstimatedValue').value = item.estimatedValue || 0;
     document.getElementById('itemBarcode').value = item.barcode || '';
     document.getElementById('itemCoverUrl').value = item.coverUrl || '';
+    
+    // Trigger preview update
+    updateCoverPreview();
 }
 
 // Handle edit item form submission
@@ -108,6 +136,9 @@ async function handleEditItem(e) {
     const userId = localStorage.getItem('userId');
     const title = document.getElementById('itemTitle').value.trim();
     const mediaType = document.getElementById('itemMediaType').value;
+    const condition = document.getElementById('itemCondition').value;
+    const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
+    const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
 
     if (!title || !mediaType) {
         showFormMessage('Please fill in all required fields', 'error');
@@ -123,7 +154,10 @@ async function handleEditItem(e) {
         artist: document.getElementById('itemArtistAuthor').value.trim(),
         year: parseInt(document.getElementById('itemYear').value) || 0,
         notes: document.getElementById('itemDescription').value.trim(),
+        condition: condition,
+        quantity: quantity,
         format: document.getElementById('itemFormat').value.trim(),
+        estimatedValue: estimatedValue,
         barcode: document.getElementById('itemBarcode').value.trim(),
         coverUrl: document.getElementById('itemCoverUrl').value.trim()
     };

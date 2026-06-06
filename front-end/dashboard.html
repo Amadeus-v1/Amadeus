@@ -15,6 +15,13 @@
                     <h1>🎭 Amadeus</h1>
                 </div>
                 <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <span id="userGreeting" class="nav-user">Welcome!</span>
                     <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                 </div>
@@ -23,119 +30,86 @@
 
         <!-- Main Dashboard Container -->
         <div class="dashboard-container">
-            <header class="dashboard-header">
-                <h1>My Collections</h1>
-                <p>Manage your collection and connect with other collectors</p>
+            <header class="dashboard-header" style="text-align: center;">
+                <h1>My Collection Hub</h1>
+                <p>Welcome to your personal physical media management platform</p>
             </header>
 
             <main class="dashboard-main">
-                <!-- Quick Actions -->
+                <!-- Quick Actions Grid -->
                 <section class="quick-actions">
+                    <button class="action-card" id="viewCollectionsBtn">
+                        <span class="action-icon">📚</span>
+                        <span class="action-title">My Collection</span>
+                        <span class="action-desc">Browse and organize your library</span>
+                    </button>
                     <button class="action-card" id="barcodeBtn">
                         <span class="action-icon">📱</span>
                         <span class="action-title">Barcode Scanner</span>
-                        <span class="action-desc">Scan items quickly</span>
+                        <span class="action-desc">Scan physical items instantly</span>
                     </button>
                     <button class="action-card" id="addItemBtn">
                         <span class="action-icon">➕</span>
                         <span class="action-title">Add Item</span>
-                        <span class="action-desc">Manual entry</span>
-                    </button>
-                    <button class="action-card" id="testApiBtn">
-                        <span class="action-icon">🧪</span>
-                        <span class="action-title">Test API</span>
-                        <span class="action-desc">Test backend endpoints</span>
-                    </button>
-                    <button class="action-card" id="viewCollectionsBtn">
-                        <span class="action-icon">📚</span>
-                        <span class="action-title">View Collections</span>
-                        <span class="action-desc">Browse your items</span>
+                        <span class="action-desc">Manual entry for rare items</span>
                     </button>
                     <button class="action-card" id="browseMarketplaceBtn">
                         <span class="action-icon">🛍️</span>
                         <span class="action-title">Marketplace</span>
-                        <span class="action-desc">Explore listings</span>
+                        <span class="action-desc">Explore community listings</span>
                     </button>
                     <button class="action-card" id="connectFriendsBtn">
                         <span class="action-icon">👥</span>
                         <span class="action-title">Friends</span>
-                        <span class="action-desc">Manage connections</span>
+                        <span class="action-desc">Manage your connections</span>
+                    </button>
+                    <button class="action-card" id="testApiBtn">
+                        <span class="action-icon">🧪</span>
+                        <span class="action-title">Test API</span>
+                        <span class="action-desc">Backend debug tools</span>
                     </button>
                 </section>
 
-                <!-- API Tester Section -->
+                <!-- API Tester Section (Initially Hidden) -->
                 <section id="apiTesterSection" class="feature-section hidden">
                     <h2>API Tester</h2>
-                    
-                    <div class="api-endpoints">
-                        <div class="endpoint-card">
+                    <div class="api-endpoints" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
                             <h3>/api/hello</h3>
                             <form class="endpoint-form" id="helloForm">
-                                <input type="text" placeholder="Enter name" id="helloName" required>
-                                <button type="submit" class="btn btn-primary">Test</button>
+                                <div class="form-group">
+                                    <input type="text" placeholder="Enter name" id="helloName" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
                             </form>
-                            <div id="helloResult" class="endpoint-result hidden"></div>
+                            <div id="helloResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
                         </div>
 
-                        <div class="endpoint-card">
+                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
                             <h3>/api/return</h3>
                             <form class="endpoint-form" id="returnForm">
-                                <textarea placeholder="key1=value1&key2=value2" id="returnParams" rows="3"></textarea>
-                                <button type="submit" class="btn btn-primary">Test</button>
+                                <div class="form-group">
+                                    <textarea placeholder="key1=value1&key2=value2" id="returnParams" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
                             </form>
-                            <div id="returnResult" class="endpoint-result hidden"></div>
+                            <div id="returnResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
                         </div>
                     </div>
-
-                    <button class="btn btn-secondary" onclick="closeApiTester()">Close</button>
+                    <button class="btn btn-secondary" onclick="closeApiTester()" style="margin-top: 32px;">Close Tester</button>
                 </section>
 
-                <!-- Collections Section -->
-                <section id="collectionsSection" class="feature-section hidden">
-                    <h2>Your Collections</h2>
-                    <div id="collectionsList" class="collections-list">
-                        <p class="empty-message">No collections yet</p>
-                    </div>
-                    <button class="btn btn-secondary" onclick="closeCollections()">Close</button>
-                </section>
-
-                <!-- Catalog & Collection Tools -->
-                <section id="catalogSection" class="feature-section">
-                    <h2>Catalog & Collection Tools</h2>
-                    <div class="api-endpoints">
-                        <div class="endpoint-card">
-                            <h3>Collection Categories</h3>
-                            <div id="categoryList" class="collections-list">Loading categories…</div>
-                        </div>
-                        <div class="endpoint-card">
-                            <h3>Create Catalog Item</h3>
-                            <form id="catalogItemForm" class="endpoint-form">
-                                <input type="text" id="catalogTitle" placeholder="Title" required>
-                                <input type="text" id="catalogArtist" placeholder="Artist">
-                                <input type="text" id="catalogCategoryId" placeholder="Category ID (optional)">
-                                <input type="text" id="catalogEdition" placeholder="Edition">
-                                <button type="submit" class="btn btn-primary">Create</button>
-                            </form>
-                            <div id="catalogItemResult" class="endpoint-result hidden"></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Main Dashboard Content -->
+                <!-- Welcome Content -->
                 <section id="mainContent" class="feature-section">
                     <div class="welcome-card">
-                        <h2>Welcome to Amadeus! 🎉</h2>
-                        <p>Your personal collection management and marketplace platform.</p>
-                        <ul class="features-list">
-                            <li>📚 Organize and manage your collections</li>
-                            <li>👥 Connect with other collectors and share your passion</li>
-                            <li>🛍️ Buy and sell items in our marketplace</li>
-                            <li>🔍 Search and discover new items</li>
-                            <li>🖼️ Upload and showcase your collections</li>
+                        <h2>Welcome to Amadeus! 👋</h2>
+                        <p>Your one-stop destination for media collection management. Build your library, track your items, and connect with collectors worldwide.</p>
+                        <ul class="features-list" style="margin-top: 24px; padding-left: 20px; list-style: none;">
+                            <li style="margin-bottom: 12px;"><strong>Catalog:</strong> Build a digital database of your physical books, movies, and records.</li>
+                            <li style="margin-bottom: 12px;"><strong>Scan:</strong> Use our smart barcode scanner to fetch item details automatically.</li>
+                            <li style="margin-bottom: 12px;"><strong>Connect:</strong> Follow other collectors to see their libraries and latest acquisitions.</li>
+                            <li style="margin-bottom: 12px;"><strong>Trade:</strong> List your duplicates on the marketplace for others to find.</li>
                         </ul>
-                        <p style="margin-top: 20px; color: #666;">
-                            Use the buttons above to get started!
-                        </p>
                     </div>
                 </section>
             </main>
@@ -143,10 +117,11 @@
 
         <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>🎭 Amadeus - Your Collection Companion | Backend: <code>localhost:8080</code></p>
+            <p>🎭 Amadeus - Your Collection Companion</p>
         </footer>
     </div>
 
+    <script src="theme.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

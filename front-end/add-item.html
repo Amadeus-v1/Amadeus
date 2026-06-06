@@ -8,23 +8,28 @@
 </head>
 <body>
     <div class="dashboard-wrapper">
-        <!-- Navigation Bar -->
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-brand">
                     <h1>🎭 Amadeus</h1>
                 </div>
                 <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <span id="userGreeting" class="nav-user">Welcome!</span>
                     <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                 </div>
             </div>
         </nav>
 
-        <!-- Main Dashboard Container -->
         <div class="dashboard-container">
-            <div class="breadcrumb">
-                <a href="dashboard.html" class="breadcrumb-link">← Back to Dashboard</a>
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
             </div>
 
             <header class="dashboard-header">
@@ -33,29 +38,20 @@
             </header>
 
             <main class="dashboard-main">
-                <!-- Quick Barcode Lookup -->
-                <div class="barcode-quick-lookup" style="background: #f0f8ff; border: 2px solid #667eea; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
-                    <h3 style="margin: 0 0 0.75rem 0; color: #333;">⚡ Quick Barcode Lookup</h3>
-                    <p style="margin: 0 0 1rem 0; color: #666; font-size: 0.9rem;">Have a barcode? Use our scanner for instant item lookup</p>
-                    <a href="barcode.html" class="btn btn-primary" style="display: inline-block; text-decoration: none;">📱 Go to Barcode Scanner</a>
+                <div class="feature-section" style="text-align: center; border-color: var(--accent);">
+                    <h3 style="margin-bottom: 12px;">⚡ Quick Barcode Lookup</h3>
+                    <p style="margin-bottom: 20px; color: var(--text);">Use your camera or a scanner for instant item lookup</p>
+                    <a href="barcode.html" class="btn btn-primary" style="text-decoration: none;">📱 Go to Barcode Scanner</a>
                 </div>
 
-                <!-- Add Item Form -->
-                <form id="addItemForm" class="add-item-form">
-                    <div class="form-section">
+                <form id="addItemForm">
+                    <div class="feature-section">
                         <h2>Basic Information</h2>
-                        
-                        <div class="form-row">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
                             <div class="form-group">
                                 <label for="itemTitle">Title *</label>
-                                <input 
-                                    type="text" 
-                                    id="itemTitle" 
-                                    placeholder="e.g., The Great Gatsby, Dark Side of the Moon"
-                                    required
-                                >
+                                <input type="text" id="itemTitle" placeholder="e.g., The Great Gatsby" required>
                             </div>
-
                             <div class="form-group">
                                 <label for="itemMediaType">Media Type *</label>
                                 <select id="itemMediaType" required>
@@ -73,210 +69,94 @@
                                 </select>
                             </div>
                         </div>
-
-                        <div class="form-row">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
                             <div class="form-group">
                                 <label for="itemArtistAuthor">Artist / Author</label>
-                                <input 
-                                    type="text" 
-                                    id="itemArtistAuthor" 
-                                    placeholder="e.g., Pink Floyd, F. Scott Fitzgerald"
-                                >
+                                <input type="text" id="itemArtistAuthor" placeholder="e.g., Pink Floyd">
                             </div>
-
                             <div class="form-group">
                                 <label for="itemReleaseDate">Release Date</label>
-                                <input 
-                                    type="date" 
-                                    id="itemReleaseDate"
-                                >
+                                <input type="date" id="itemReleaseDate">
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label for="itemDescription">Description</label>
-                            <textarea 
-                                id="itemDescription" 
-                                placeholder="Add notes about this item..."
-                                rows="4"
-                            ></textarea>
+                            <label for="itemDescription">Notes</label>
+                            <textarea id="itemDescription" placeholder="Add personal notes..." rows="4"></textarea>
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <h2>Details & Condition</h2>
+                    <div class="feature-section">
+                        <h2>Media & Cover</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div class="form-group">
+                                    <label for="itemCoverFile">Upload Image</label>
+                                    <input type="file" id="itemCoverFile" accept="image/*">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <hr style="flex: 1; border: none; border-top: 1px solid var(--border);">
+                                    <span style="color: var(--muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">or URL</span>
+                                    <hr style="flex: 1; border: none; border-top: 1px solid var(--border);">
+                                </div>
+                                <div class="form-group">
+                                    <label for="itemCoverUrl">Image URL</label>
+                                    <input type="url" id="itemCoverUrl" placeholder="https://example.com/image.jpg">
+                                </div>
+                            </div>
+                            <div id="coverPreviewContainer" style="display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px;">
+                                <span style="color: var(--muted); font-size: 0.8rem;">Preview</span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="form-row">
+                    <div class="feature-section">
+                        <h2>Details & Condition</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
                             <div class="form-group">
                                 <label for="itemCondition">Condition *</label>
                                 <select id="itemCondition" required>
                                     <option value="">Select condition...</option>
-                                    <option value="Mint">Mint (Perfect)</option>
-                                    <option value="Near Mint">Near Mint (Excellent)</option>
-                                    <option value="Very Good">Very Good (Lightly Used)</option>
-                                    <option value="Good">Good (Used)</option>
-                                    <option value="Fair">Fair (Heavy Use)</option>
-                                    <option value="Poor">Poor (Damaged)</option>
+                                    <option value="Mint">Mint</option>
+                                    <option value="Near Mint">Near Mint</option>
+                                    <option value="Very Good">Very Good</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
                                 </select>
                             </div>
-
-                            <div class="form-group">
-                                <label for="itemFormat">Format (if applicable)</label>
-                                <input 
-                                    type="text" 
-                                    id="itemFormat" 
-                                    placeholder="e.g., Hardcover, First Edition, Remaster"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="itemGenre">Genre / Category</label>
-                                <input 
-                                    type="text" 
-                                    id="itemGenre" 
-                                    placeholder="e.g., Rock, Fiction, Action"
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="itemLanguage">Language</label>
-                                <input 
-                                    type="text" 
-                                    id="itemLanguage" 
-                                    placeholder="e.g., English, Spanish"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="itemPressLocation">Press/Manufacturer Location</label>
-                                <input 
-                                    type="text" 
-                                    id="itemPressLocation" 
-                                    placeholder="e.g., USA, UK, Japan"
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="itemPressDate">Press/Manufacture Date</label>
-                                <input 
-                                    type="date" 
-                                    id="itemPressDate"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="itemISBN">ISBN / Barcode / ID</label>
-                                <input 
-                                    type="text" 
-                                    id="itemISBN" 
-                                    placeholder="Enter ISBN, barcode, or product ID"
-                                >
-                            </div>
-
                             <div class="form-group">
                                 <label for="itemQuantity">Quantity *</label>
-                                <input 
-                                    type="number" 
-                                    id="itemQuantity" 
-                                    value="1"
-                                    min="1"
-                                    required
-                                >
+                                <input type="number" id="itemQuantity" value="1" min="1" required>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                            <div class="form-group">
+                                <label for="itemEstimatedValue">Value ($)</label>
+                                <input type="number" id="itemEstimatedValue" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="itemFormat">Format</label>
+                                <input type="text" id="itemFormat" placeholder="e.g., Hardcover">
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <h2>Valuation & Status</h2>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="itemPurchasePrice">Purchase Price ($)</label>
-                                <input 
-                                    type="number" 
-                                    id="itemPurchasePrice" 
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="itemEstimatedValue">Estimated Current Value ($)</label>
-                                <input 
-                                    type="number" 
-                                    id="itemEstimatedValue" 
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="itemPurchaseDate">Purchase Date</label>
-                                <input 
-                                    type="date" 
-                                    id="itemPurchaseDate"
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="itemLocation">Storage Location</label>
-                                <input 
-                                    type="text" 
-                                    id="itemLocation" 
-                                    placeholder="e.g., Shelf A, Box 1, Display Case"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-group checkbox-group">
-                            <label>
-                                <input type="checkbox" id="itemIsSigned">
-                                Signed/Autographed
-                            </label>
-                            <label>
-                                <input type="checkbox" id="itemIsRare">
-                                Rare/Limited Edition
-                            </label>
-                            <label>
-                                <input type="checkbox" id="itemIsFirstEdition">
-                                First Edition/Original Release
-                            </label>
-                        </div>
+                    <div style="display: flex; gap: 16px; margin-top: 32px;">
+                        <button type="submit" class="btn btn-primary">Add to Collection</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
                     </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-large">
-                            ✓ Add Item to Collection
-                        </button>
-                        <button type="reset" class="btn btn-secondary btn-large">
-                            Clear Form
-                        </button>
-                        <a href="dashboard.html" class="btn btn-secondary btn-large" style="text-decoration: none;">
-                            Cancel
-                        </a>
-                    </div>
-
-                    <div id="formMessage" class="form-message hidden"></div>
+                    <div id="formMessage" class="error-message hidden"></div>
                 </form>
             </main>
         </div>
 
-        <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>🎭 Amadeus - Your Collection Companion | Backend: <code>localhost:8080</code></p>
+            <p>🎭 Amadeus - Your Collection Companion</p>
         </footer>
     </div>
 
+    <script src="theme.js"></script>
     <script src="add-item.js"></script>
 </body>
 </html>

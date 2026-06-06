@@ -7,6 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Theme Toggle (Fixed Position for Login) -->
+    <div style="position: absolute; top: 20px; right: 20px;">
+        <div class="theme-toggle-container">
+            <span class="theme-label">Mode</span>
+            <label class="switch">
+                <input type="checkbox" id="themeCheckbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
@@ -19,21 +30,21 @@
                 <h2>Login</h2>
                 
                 <div class="form-group">
-                    <label for="loginUsername">Username or Email:</label>
+                    <label for="loginUsername">Username or Email</label>
                     <input 
                         type="text" 
                         id="loginUsername" 
-                        placeholder="Enter your username or email"
+                        placeholder="Username or email"
                         required
                     >
                 </div>
 
                 <div class="form-group">
-                    <label for="loginPassword">Password:</label>
+                    <label for="loginPassword">Password</label>
                     <input 
                         type="password" 
                         id="loginPassword" 
-                        placeholder="Enter your password"
+                        placeholder="Password"
                         required
                     >
                 </div>
@@ -53,7 +64,7 @@
                 <h2>Create Account</h2>
                 
                 <div class="form-group">
-                    <label for="regUsername">Username:</label>
+                    <label for="regUsername">Username</label>
                     <input 
                         type="text" 
                         id="regUsername" 
@@ -63,7 +74,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="regEmail">Email:</label>
+                    <label for="regEmail">Email</label>
                     <input 
                         type="email" 
                         id="regEmail" 
@@ -73,7 +84,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="regPassword">Password:</label>
+                    <label for="regPassword">Password</label>
                     <input 
                         type="password" 
                         id="regPassword" 
@@ -83,7 +94,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="regPasswordConfirm">Confirm Password:</label>
+                    <label for="regPasswordConfirm">Confirm Password</label>
                     <input 
                         type="password" 
                         id="regPasswordConfirm" 
@@ -104,6 +115,7 @@
         </div>
     </div>
 
+    <script src="theme.js"></script>
     <script src="auth.js"></script>
 </body>
 </html>

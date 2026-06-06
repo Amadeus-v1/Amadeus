@@ -20,7 +20,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('addItemForm').addEventListener('submit', handleAddItem);
+    
+    // Live preview for cover URL
+    const coverUrlInput = document.getElementById('itemCoverUrl');
+    if (coverUrlInput) {
+        coverUrlInput.addEventListener('input', updateCoverPreview);
+    }
 });
+
+// Update cover preview
+function updateCoverPreview() {
+    const url = document.getElementById('itemCoverUrl').value.trim();
+    const previewContainer = document.getElementById('coverPreviewContainer');
+    
+    if (url) {
+        previewContainer.innerHTML = `<img src="${url}" alt="Preview" style="max-height: 100%; max-width: 100%; border-radius: 4px;" onerror="this.parentElement.innerHTML='<span style=\'color: #ff4444; font-size: 0.8rem;\'>Invalid Image URL</span>'">`;
+    } else {
+        previewContainer.innerHTML = `<span style="color: var(--muted); font-size: 0.8rem;">Image Preview</span>`;
+    }
+}
 
 // Logout handler
 function logout() {
@@ -36,12 +54,20 @@ function logout() {
 function showFormMessage(message, type = 'success') {
     const messageEl = document.getElementById('formMessage');
     messageEl.textContent = message;
-    messageEl.className = `form-message ${type}`;
-    messageEl.classList.remove('hidden');
+    messageEl.className = `error-message ${type === 'success' ? '' : 'active'}`;
+    if (type === 'success') {
+        messageEl.style.backgroundColor = '#10b981';
+        messageEl.style.display = 'block';
+        messageEl.classList.remove('hidden');
+    } else {
+        messageEl.style.backgroundColor = '#ff4444';
+        messageEl.style.display = 'block';
+        messageEl.classList.remove('hidden');
+    }
     
     if (type === 'success') {
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'collection.html';
         }, 1500);
     }
 }
@@ -54,37 +80,34 @@ async function handleAddItem(e) {
     const title = document.getElementById('itemTitle').value.trim();
     const mediaType = document.getElementById('itemMediaType').value;
     const condition = document.getElementById('itemCondition').value;
-    const quantity = parseInt(document.getElementById('itemQuantity').value);
+    const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
+    const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
+    const coverUrl = document.getElementById('itemCoverUrl').value.trim();
 
-    if (!title || !mediaType || !condition || !quantity) {
+    if (!title || !mediaType || !condition) {
         showFormMessage('Please fill in all required fields', 'error');
         return;
     }
+
+    const releaseDate = document.getElementById('itemReleaseDate').value;
+    const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : 0;
 
     // Build item object with all details
     const itemData = {
         title: title,
         mediaType: mediaType,
         artistAuthor: document.getElementById('itemArtistAuthor').value.trim(),
-        releaseDate: document.getElementById('itemReleaseDate').value,
+        releaseYear: releaseYear,
         description: document.getElementById('itemDescription').value.trim(),
         condition: condition,
         format: document.getElementById('itemFormat').value.trim(),
-        genre: document.getElementById('itemGenre').value.trim(),
-        language: document.getElementById('itemLanguage').value.trim(),
-        pressLocation: document.getElementById('itemPressLocation').value.trim(),
-        pressDate: document.getElementById('itemPressDate').value,
-        isbn: document.getElementById('itemISBN').value.trim(),
         quantity: quantity,
-        purchasePrice: parseFloat(document.getElementById('itemPurchasePrice').value) || 0,
-        estimatedValue: parseFloat(document.getElementById('itemEstimatedValue').value) || 0,
-        purchaseDate: document.getElementById('itemPurchaseDate').value,
-        location: document.getElementById('itemLocation').value.trim(),
-        isSigned: document.getElementById('itemIsSigned').checked,
-        isRare: document.getElementById('itemIsRare').checked,
-        isFirstEdition: document.getElementById('itemIsFirstEdition').checked,
+        estimatedValue: estimatedValue,
+        coverUrl: coverUrl,
         dateAdded: new Date().toISOString()
     };
+
+    console.log('[add-item.js] Sending item data:', itemData);
 
     try {
         const response = await fetch(`${API_BASE_URL}/collection/add`, {
@@ -93,6 +116,7 @@ async function handleAddItem(e) {
             body: JSON.stringify({
                 userId: userId,
                 title: title,
+                coverUrl: coverUrl, // Send at top level too for MediaStore.addItem
                 collection: itemData
             })
         });

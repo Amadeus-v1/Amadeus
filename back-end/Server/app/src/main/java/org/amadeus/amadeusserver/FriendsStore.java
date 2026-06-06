@@ -46,10 +46,23 @@ public class FriendsStore {
 
         try {
             initialize();
+            
+            // Check if already friends
+            String checkSql = "SELECT status FROM friendships WHERE userId = ? AND friendId = ?";
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(checkSql)) {
+                statement.setString(1, userId);
+                statement.setString(2, friendId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return new JSONObject().put("userId", userId).put("friendId", friendId).put("status", resultSet.getString("status"));
+                    }
+                }
+            }
+
+            // For now, we'll auto-accept requests (Following model)
             String sql = """
                     INSERT INTO friendships (userId, friendId, status)
-                    VALUES (?, ?, 'accepted')
-                    ON CONFLICT(userId, friendId) DO UPDATE SET status = excluded.status;
+                    VALUES (?, ?, 'accepted');
                     """;
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -61,7 +74,7 @@ public class FriendsStore {
             JSONObject result = new JSONObject();
             result.put("userId", userId);
             result.put("friendId", friendId);
-            result.put("accepted", true);
+            result.put("status", "accepted");
             return result;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add friend", e);
@@ -83,9 +96,21 @@ public class FriendsStore {
                 try (ResultSet resultSet = statement.executeQuery()) {
                     JSONArray friends = new JSONArray();
                     while (resultSet.next()) {
+                        String fId = resultSet.getString("friendId");
                         JSONObject friend = new JSONObject();
-                        friend.put("friendId", resultSet.getString("friendId"));
+                        friend.put("friendId", fId);
+                        
+                        // Resolve username from UserStore
+                        JSONObject user = UserStore.findById(fId);
+                        if (user != null) {
+                            friend.put("username", user.optString("username", "Unknown User"));
+                        } else {
+                            // Fallback if user not found in userAccounts.db
+                            friend.put("username", "User (" + (fId.length() > 8 ? fId.substring(0, 8) : fId) + ")");
+                        }
+                        
                         friend.put("accepted", "accepted".equals(resultSet.getString("status")));
+                        friend.put("status", resultSet.getString("status"));
                         friend.put("createdAt", resultSet.getString("createdAt"));
                         friends.put(friend);
                     }
@@ -126,7 +151,17 @@ public class FriendsStore {
                     JSONArray items = new JSONArray();
                     while (resultSet.next()) {
                         JSONObject item = new JSONObject();
-                        item.put("friendId", resultSet.getString("friendId"));
+                        String fId = resultSet.getString("friendId");
+                        item.put("friendId", fId);
+                        
+                        // Resolve username
+                        JSONObject user = UserStore.findById(fId);
+                        if (user != null) {
+                            item.put("friendUsername", user.optString("username", "Unknown User"));
+                        } else {
+                            item.put("friendUsername", "User (" + (fId.length() > 8 ? fId.substring(0, 8) : fId) + ")");
+                        }
+                        
                         item.put("id", resultSet.getString("id"));
                         item.put("title", resultSet.getString("title"));
                         item.put("artist", resultSet.getString("artist"));

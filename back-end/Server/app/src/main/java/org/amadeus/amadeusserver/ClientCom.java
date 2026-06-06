@@ -367,13 +367,39 @@ public class ClientCom {
 
         String userId = requestJson.optString("userId", "");
         String friendId = requestJson.optString("friendId", "");
-        if (userId.isBlank() || friendId.isBlank()) {
-            sendError(exchange, 400, "Missing userId or friendId");
+        String friendUsername = requestJson.optString("friendUsername", "");
+
+        if (userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId");
             return;
         }
 
-        JSONObject result = FriendsStore.addFriend(userId, friendId);
-        sendJsonResponse(exchange, 201, new JSONObject().put("message", "Friend added").put("friend", result));
+        if (friendId.isBlank() && !friendUsername.isBlank()) {
+            JSONObject friend = UserStore.findByUsernameOrEmail(friendUsername, friendUsername);
+            if (friend != null) {
+                friendId = friend.getString("id");
+            } else {
+                sendError(exchange, 404, "User not found");
+                return;
+            }
+        }
+
+        if (friendId.isBlank()) {
+            sendError(exchange, 400, "Missing friendId or friendUsername");
+            return;
+        }
+
+        if (userId.equals(friendId)) {
+            sendError(exchange, 400, "You cannot add yourself as a friend");
+            return;
+        }
+
+        try {
+            JSONObject result = FriendsStore.addFriend(userId, friendId);
+            sendJsonResponse(exchange, 201, new JSONObject().put("message", "Friend added successfully").put("friend", result));
+        } catch (Exception e) {
+            sendError(exchange, 400, e.getMessage());
+        }
     }
 
     public static void handleFriendsListRequest(HttpExchange exchange) throws IOException {
