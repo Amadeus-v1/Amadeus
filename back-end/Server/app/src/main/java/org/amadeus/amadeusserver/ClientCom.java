@@ -478,6 +478,17 @@ public class ClientCom {
         response.put("listings", MarketplaceStore.listListings(sellerId));
         sendJsonResponse(exchange, 200, response);
     }
+    
+    public static void handleMarketplaceActiveListingsRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("listings", MarketplaceStore.listAllActiveListings());
+        sendJsonResponse(exchange, 200, response);
+    }
 
     public static void handleMarketplaceSaleRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {

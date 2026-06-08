@@ -86,12 +86,13 @@ public class MarketplaceStore {
             String sql = """
                     SELECT id, sellerId, itemId, price, currency, status, createdAt
                     FROM listings
-                    WHERE sellerId = ?
+                    WHERE (? IS NULL OR sellerId = ?)
                     ORDER BY createdAt DESC;
                     """;
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, sellerId);
+                statement.setString(2, sellerId);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     JSONArray items = new JSONArray();
                     while (resultSet.next()) {
@@ -110,6 +111,54 @@ public class MarketplaceStore {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to list marketplace listings", e);
+        }
+    }
+    
+    public static JSONArray listAllActiveListings() {
+        try {
+            initialize();
+            String sql = """
+                    SELECT id, sellerId, itemId, price, currency, status, createdAt
+                    FROM listings
+                    WHERE status = 'active'
+                    ORDER BY createdAt DESC;
+                    """;
+
+            try (Connection connection = getConnection(); Statement statement = connection.createStatement(); 
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+                JSONArray items = new JSONArray();
+                while (resultSet.next()) {
+                    String itemId = resultSet.getString("itemId");
+                    String sellerId = resultSet.getString("sellerId");
+                    
+                    JSONObject listing = new JSONObject();
+                    listing.put("id", resultSet.getString("id"));
+                    listing.put("sellerId", sellerId);
+                    listing.put("itemId", itemId);
+                    listing.put("price", resultSet.getDouble("price"));
+                    listing.put("currency", resultSet.getString("currency"));
+                    listing.put("createdAt", resultSet.getString("createdAt"));
+                    
+                    // Resolve Item Details
+                    JSONObject itemDetails = MediaStore.getItemById(itemId, sellerId);
+                    if (itemDetails != null) {
+                        listing.put("title", itemDetails.optString("title", "Unknown"));
+                        listing.put("artist", itemDetails.optString("artist", ""));
+                        listing.put("coverUrl", itemDetails.optString("coverUrl", ""));
+                        listing.put("mediaType", itemDetails.optString("mediaType", ""));
+                        listing.put("condition", itemDetails.optString("condition", ""));
+                    }
+                    
+                    // Resolve Seller Username
+                    JSONObject seller = UserStore.findById(sellerId);
+                    listing.put("sellerUsername", seller != null ? seller.optString("username", "Unknown") : "Unknown");
+                    
+                    items.put(listing);
+                }
+                return items;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to list active marketplace listings", e);
         }
     }
 
@@ -149,6 +198,13 @@ public class MarketplaceStore {
                 statement.setDouble(7, payoutAmount);
                 statement.setString(8, PLATFORM_BANK_ACCOUNT);
                 statement.setString(9, "completed");
+                statement.executeUpdate();
+            }
+            
+            // Mark listing as sold
+            String updateListingSql = "UPDATE listings SET status = 'sold' WHERE id = ?";
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(updateListingSql)) {
+                statement.setString(1, listingId);
                 statement.executeUpdate();
             }
 

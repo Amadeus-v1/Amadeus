@@ -36,20 +36,38 @@
 
             <header class="dashboard-header">
                 <h1>🛍️ Marketplace</h1>
-                <p>Buy, sell, and trade items with other collectors</p>
+                <p>Buy and trade items with other collectors worldwide</p>
             </header>
 
             <main class="dashboard-main">
-                <div class="feature-section" style="text-align: center; padding: 60px 24px;">
-                    <div style="font-size: 4rem; margin-bottom: 24px;">✨</div>
-                    <h2 style="margin-bottom: 16px;">Marketplace is coming soon!</h2>
-                    <p style="color: var(--muted); max-width: 500px; margin: 0 auto 32px;">
-                        We're working hard to bring you a secure platform for trading your collectibles. 
-                        Stay tuned for updates!
-                    </p>
-                    <a href="dashboard.html" class="btn btn-primary">Return to Dashboard</a>
+                <!-- Search and Filters (Optional for now) -->
+                <div class="feature-section" style="margin-bottom: 32px; padding: 24px;">
+                    <input 
+                        type="text" 
+                        id="marketplaceSearch" 
+                        placeholder="🔍 Search items for sale..."
+                        style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);"
+                    >
+                </div>
+
+                <!-- Listings Grid -->
+                <div id="marketplaceContainer" class="collections-list">
+                    <p style="text-align: center; color: var(--muted); padding: 40px;">Browsing active listings...</p>
                 </div>
             </main>
+        </div>
+
+        <!-- Buy Modal -->
+        <div id="buyModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+            <div class="feature-section" style="width: 90%; max-width: 500px; background: var(--card-bg); position: relative;">
+                <button onclick="closeBuyModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text); font-size: 2rem; cursor: pointer;">&times;</button>
+                <h2 id="buyModalTitle">Purchase Item</h2>
+                <div id="buyModalBody" style="margin: 24px 0;"></div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="confirmPurchase()">Confirm Buy</button>
+                    <button class="btn btn-secondary" onclick="closeBuyModal()">Cancel</button>
+                </div>
+            </div>
         </div>
 
         <footer class="dashboard-footer">

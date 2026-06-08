@@ -223,11 +223,57 @@ function openItemModal(itemId) {
                 ${item.format ? `<div><strong>Format:</strong> ${escapeHtml(item.format)}</div>` : ''}
                 ${item.barcode ? `<div><strong>Barcode:</strong> ${escapeHtml(item.barcode)}</div>` : ''}
                 ${item.notes || item.description ? `<div><strong>Notes:</strong> ${escapeHtml(item.notes || item.description)}</div>` : ''}
+                
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 12px 0;">
+                
+                <div style="background: var(--bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin-bottom: 12px;">List on Marketplace</h4>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="number" id="listingPrice" placeholder="Listing Price ($)" step="0.01" min="0" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);">
+                        <button class="btn btn-primary" onclick="listItemOnMarketplace()" style="padding: 8px 16px; font-size: 0.8rem;">List Item</button>
+                    </div>
+                </div>
             </div>
         </div>
     `;
 
     modal.classList.remove('hidden');
+}
+
+// List item on marketplace
+async function listItemOnMarketplace() {
+    const price = parseFloat(document.getElementById('listingPrice').value);
+    const userId = localStorage.getItem('userId');
+
+    if (isNaN(price) || price <= 0) {
+        alert('Please enter a valid listing price');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/marketplace/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sellerId: userId,
+                itemId: currentItemId,
+                price: price,
+                currency: 'USD',
+                status: 'active'
+            })
+        });
+
+        if (response.ok) {
+            alert('Item successfully listed on marketplace!');
+            closeItemModal();
+        } else {
+            const error = await response.json();
+            alert('Failed to list item: ' + (error.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error listing item:', error);
+        alert('Error connecting to marketplace service');
+    }
 }
 
 // Close item modal

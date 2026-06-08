@@ -8,6 +8,14 @@ import com.sun.net.httpserver.HttpServer;
 
 public class API {
 
+    /**
+     * Returns the port the server should run on.
+     * Checks "server.port" system property, defaults to 8080.
+     */
+    public static int getPort() {
+        return Integer.getInteger("server.port", 8080);
+    }
+
     // Add CORS headers to all responses
     private static HttpHandler addCORSHeaders(HttpHandler handler) {
         return exchange -> {
@@ -24,8 +32,12 @@ public class API {
         };
     }
 
+    /**
+     * Set up the HTTP server and start it.
+     */
     public static void setUpServer() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        int port = getPort();
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/api/hello", addCORSHeaders(ClientCom::handleHelloRequest));
         server.createContext("/api/return", addCORSHeaders(ClientCom::handleReturnRequest));
@@ -43,6 +55,7 @@ public class API {
         server.createContext("/api/friends/list", addCORSHeaders(ClientCom::handleFriendsListRequest));
         server.createContext("/api/friends/collections", addCORSHeaders(ClientCom::handleFriendsCollectionsRequest));
         server.createContext("/api/marketplace/list", addCORSHeaders(ClientCom::handleMarketplaceListRequest));
+        server.createContext("/api/marketplace/active", addCORSHeaders(ClientCom::handleMarketplaceActiveListingsRequest));
         server.createContext("/api/marketplace/create", addCORSHeaders(ClientCom::handleMarketplaceCreateListingRequest));
         server.createContext("/api/marketplace/sale", addCORSHeaders(ClientCom::handleMarketplaceSaleRequest));
         server.createContext("/api/auth/session", addCORSHeaders(ClientCom::handleAuthCreateSessionRequest));
@@ -52,7 +65,8 @@ public class API {
         server.createContext("/api/user/create", addCORSHeaders(ClientCom::handleUserCreateRequest));
         server.createContext("/api/user/login", addCORSHeaders(ClientCom::handleUserLoginRequest));
 
+        server.setExecutor(null); // creates a default executor
         server.start();
+        System.out.println("✓ Server is running on http://localhost:" + port);
     }
 }
-

@@ -25,6 +25,9 @@ dependencies {
     implementation libs.guava
     implementation 'org.json:json:20240303'
     implementation 'org.xerial:sqlite-jdbc:3.45.3.0'
+    
+    // SLF4J implementation to fix "Failed to load class" warning
+    implementation libs.slf4j.simple
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
