@@ -1,0 +1,80 @@
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Amadeus\r\nCollection management and marketplace.\r\n\r\n## Backend scope\r\nThis project now includes:\r\n- physical media catalog/search endpoints\r\n- user collection add/list endpoints\r\n- friend follow and friend-collection viewing endpoints\r\n- barcode scanner integration for quick item lookup\r\n- initial backend documentation in back-end/Server/docs/BACKEND_API.md\r\n\r\n## Next priority\r\n1. Collection and ownership tracking\r\n2. Search and catalogue enrichment\r\n3. Marketplace and trading features\r\n\r\n## Marketplace fee policy\r\nEvery completed sale applies a 3% platform fee and routes the payout to the configured bank account.\r\nSee back-end/Server/docs/MARKETPLACE_API.md for the API contract.\r\n\r\n## Backend foundations now included\r\n- auth session and refresh-token primitives: back-end/Server/docs/AUTH_API.md\r\n- image scanning / catalog matching foundation: back-end/Server/docs/IMAGE_SCANNING_API.md\r\n- barcode scanner for quick item lookup: back-end/Server/docs/BARCODE_API.md\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/README.md b/README.md
+--- a/README.md	(revision 07fa762132a9e575e68ad6a4cc75dca968b41f4d)
++++ b/README.md	(date 1781009309306)
+@@ -1,24 +1,50 @@
+ # Amadeus
+-Collection management and marketplace.
++
++Collection management and marketplace for physical media.
+ 
+-## Backend scope
+-This project now includes:
+-- physical media catalog/search endpoints
+-- user collection add/list endpoints
+-- friend follow and friend-collection viewing endpoints
+-- barcode scanner integration for quick item lookup
+-- initial backend documentation in back-end/Server/docs/BACKEND_API.md
++## Overview
+ 
+-## Next priority
+-1. Collection and ownership tracking
+-2. Search and catalogue enrichment
+-3. Marketplace and trading features
++Amadeus aims to be the central platform for cataloging and selling physical media collections. By providing simple cataloging tools, social features, and an integrated marketplace, Amadeus makes collecting physical media more accessible, organized, and enjoyable for both casual collectors and enthusiasts.
+ 
+-## Marketplace fee policy
+-Every completed sale applies a 3% platform fee and routes the payout to the configured bank account.
+-See back-end/Server/docs/MARKETPLACE_API.md for the API contract.
++## Vision
+ 
+-## Backend foundations now included
+-- auth session and refresh-token primitives: back-end/Server/docs/AUTH_API.md
+-- image scanning / catalog matching foundation: back-end/Server/docs/IMAGE_SCANNING_API.md
+-- barcode scanner for quick item lookup: back-end/Server/docs/BARCODE_API.md
++To create a one-stop shop for all physical media collections, bridging the gap between casual tracking and professional-grade cataloging.
++
++## Key Features
++
++- **Multi-Modal Cataloging**:
++  - **AI Image Recognition**: Identify items by simply taking a photo of the cover.
++  - **Barcode Scanning**: Quickly add items using their UPC/EAN.
++  - **Manual Entry**: Full control over item details for rare or unlisted items.
++- **Integrated Marketplace**:
++  - Buy and sell items directly within the platform.
++  - Smart pricing recommendations based on item condition (Low, Medium, High).
++  - Low-friction transactions with a flat 3% platform fee.
++- **Collection Management**:
++  - Organize by name, release date, artist/author, or market value.
++  - Track detailed metadata: pressing location, exclusivity, and condition.
++  - Wishlist management to track desired additions.
++- **Social Features**:
++  - Connect with friends to view their collections and wishlists.
++  - Privacy controls: Set collections to Public, Private, or Friends-Only.
++  - Real-time notifications for marketplace activity and friend requests.
++
++## Supported Media
++
++Amadeus supports a wide variety of physical formats, including:
++- **Video**: DVDs, Blu-rays
++- **Music**: CDs, Vinyl Records, Cassettes
++- **Literature**: Books
++- **Gaming**: Game discs and cartridges
++- **Collectibles**: Signed editions and more
++
++## Target Audience
++
++- **Casual Collectors**: Individuals with varied collections looking for a simple, unified way to track their items.
++- **Avid Enthusiasts**: Power users who value market valuation, portfolio management, and social interaction.
++- **Marketplace Users**: Buyers and sellers looking for a dedicated physical media trading hub.
++- **Store Accounts**: Independent retailers looking to showcase and sell their inventory online.
++
++## Getting Started
++
++*(Instructions for setting up the development environment will be added as the project progresses.)*

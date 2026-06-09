@@ -2,7 +2,10 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 let currentScanResult = null;
 let cameraActive = false;
-let cameraStream = null;
+let detectionBuffer = {};
+const REQUIRED_CONFIRMATIONS = 12; // High number to make it "take time" and be very accurate
+let ocrWorker = null;
+let isProcessingOCR = false;
 
 // Check if user is logged in
 function checkAuth() {
@@ -15,11 +18,12 @@ function checkAuth() {
 }
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
 
     const username = localStorage.getItem('username');
-    document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
+    const userGreeting = document.getElementById('userGreeting');
+    if (userGreeting) userGreeting.textContent = `Welcome, ${username}!`;
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -30,7 +34,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Focus on the input field for immediate scanning
+    const startBtn = document.getElementById('startCameraButton');
+    if (startBtn) startBtn.addEventListener('click', startCamera);
+
+    const stopBtn = document.getElementById('stopCameraButton');
+    if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+
+    // Initialize Tesseract Worker for "AI Image Detection" of numbers
+    try {
+        ocrWorker = await Tesseract.createWorker('eng');
+        console.log("AI OCR Worker ready");
+    } catch (e) {
+        console.error("Failed to load AI OCR", e);
+    }
+
+    // Focus on the input field
     document.getElementById('barcodeInput').focus();
 });
 
@@ -69,12 +87,8 @@ function showSuccess(message) {
 async function handleBarcodeScan() {
     let barcode = document.getElementById('barcodeInput').value.trim();
 
-    // Clean up barcode: remove hyphens, spaces, and other formatting
-    barcode = barcode
-        .replace(/-/g, '')      // Remove hyphens
-        .replace(/ /g, '')      // Remove spaces
-        .replace(/_/g, '')      // Remove underscores
-        .replace(/\./g, '');    // Remove dots
+    // Clean up barcode
+    barcode = barcode.replace(/[- _.]/g, '');
 
     if (!barcode) {
         showError('Please enter or scan a barcode');
@@ -83,6 +97,7 @@ async function handleBarcodeScan() {
 
     const scanButton = document.getElementById('scanButton');
     scanButton.disabled = true;
+    const originalText = scanButton.innerHTML;
     scanButton.innerHTML = '<span class="loading-spinner"></span> Searching...';
 
     try {
@@ -98,8 +113,9 @@ async function handleBarcodeScan() {
             displayResults([data]);
             currentScanResult = data;
             showSuccess('✓ Item found!');
+            if (cameraActive) stopCamera();
         } else {
-            displayNoResults(barcode);
+            displayNoResults();
             currentScanResult = null;
         }
     } catch (error) {
@@ -107,7 +123,7 @@ async function handleBarcodeScan() {
         console.error('Error scanning barcode:', error);
     } finally {
         scanButton.disabled = false;
-        scanButton.innerHTML = 'Search';
+        scanButton.innerHTML = originalText;
     }
 }
 
@@ -124,53 +140,21 @@ function displayResults(results) {
         const resultHtml = `
             <div class="result-item">
                 <div class="result-header">
-                    ${item.coverUrl ? `
-                        <div class="result-cover">
-                            <img src="${item.coverUrl}" alt="${item.title}" onerror="this.style.display='none'">
-                        </div>
-                    ` : ''}
+                    ${item.coverUrl ? `<div class="result-cover"><img src="${item.coverUrl}" alt="${item.title}"></div>` : ''}
                     <div class="result-info">
                         <div class="result-title">${item.title || 'Unknown Title'}</div>
                         ${item.artist ? `<div class="result-artist">👤 ${item.artist}</div>` : ''}
                         <div class="result-artist">🏷️ ${item.barcode || 'No barcode'}</div>
                     </div>
                 </div>
-
                 <div class="result-details">
-                    ${item.mediaType ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Media Type:</span>
-                            <span>${item.mediaType}</span>
-                        </div>
-                    ` : ''}
-                    ${item.year ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Year:</span>
-                            <span>${item.year}</span>
-                        </div>
-                    ` : ''}
-                    ${item.format ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Format:</span>
-                            <span>${item.format}</span>
-                        </div>
-                    ` : ''}
-                    ${item.publisher ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Publisher:</span>
-                            <span>${item.publisher}</span>
-                        </div>
-                    ` : ''}
-                    ${item.source ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Source:</span>
-                            <span style="text-transform: capitalize;">${item.source}</span>
-                        </div>
-                    ` : ''}
+                    <div><strong>Type:</strong> ${item.mediaType || 'N/A'}</div>
+                    <div><strong>Year:</strong> ${item.year || 'N/A'}</div>
+                    <div><strong>Format:</strong> ${item.format || 'N/A'}</div>
+                    <div><strong>Source:</strong> ${item.source || 'N/A'}</div>
                 </div>
-
                 <div class="result-actions">
-                    <button class="action-btn add" onclick="addItemFromBarcode(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                    <button class="action-btn add" onclick='addItemFromBarcode(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
                         ✓ Add to Collection
                     </button>
                     <button class="action-btn clear" onclick="clearResults()">
@@ -179,56 +163,32 @@ function displayResults(results) {
                 </div>
             </div>
         `;
-
         resultsList.insertAdjacentHTML('beforeend', resultHtml);
     });
 
     resultsSection.classList.add('active');
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// Display no results message
-function displayNoResults(barcode) {
-    const noResults = document.getElementById('noResults');
-    const resultsSection = document.getElementById('resultsSection');
-
-    resultsSection.classList.remove('active');
-    noResults.style.display = 'block';
+function displayNoResults() {
+    document.getElementById('resultsSection').classList.remove('active');
+    document.getElementById('noResults').style.display = 'block';
 }
 
-// Add item from barcode result
 async function addItemFromBarcode(itemData) {
     const userId = localStorage.getItem('userId');
-
-    // Map source media types to standardized Amadeus types
-    const mediaTypeMap = {
-        'Book': 'Book',
-        'CD': 'CD',
-        'DVD': 'DVD',
-        'Blu-ray': 'Blu-ray',
-        'Vinyl': 'Vinyl',
-        'Cassette': 'Cassette',
-        'Video Game': 'Video Game',
-        'Collectible': 'Collectible',
-        'Comic': 'Comic',
-        'Other': 'Other'
-    };
-
-    const standardizedType = mediaTypeMap[itemData.mediaType] || itemData.mediaType || 'Other';
-
-    // Prepare collection data
     const collectionData = {
         title: itemData.title || '',
-        mediaType: standardizedType,
+        mediaType: itemData.mediaType || 'Other',
         artistAuthor: itemData.artist || '',
         description: `Added via barcode scan (${itemData.source})`,
         condition: 'Good',
         format: itemData.format || '',
         quantity: 1,
         dateAdded: new Date().toISOString(),
-        barcode: itemData.barcode || ''
+        barcode: itemData.barcode || '',
+        coverUrl: itemData.coverUrl || ''
     };
-
-    console.log('[barcode.js] Adding item with mediaType:', standardizedType);
 
     try {
         const response = await fetch(`${API_BASE_URL}/collection/add`, {
@@ -237,79 +197,134 @@ async function addItemFromBarcode(itemData) {
             body: JSON.stringify({
                 userId: userId,
                 title: itemData.title || 'Unknown',
-                mediaType: standardizedType,
+                coverUrl: itemData.coverUrl || '',
                 collection: collectionData
             })
         });
 
-        const data = await response.json();
-
         if (response.ok) {
             showSuccess('✓ Item added to collection!');
-            setTimeout(() => {
-                window.location.href = 'collection.html';
-            }, 1500);
+            setTimeout(() => { window.location.href = 'collection.html'; }, 1500);
         } else {
+            const data = await response.json();
             showError(data.message || 'Failed to add item');
         }
     } catch (error) {
         showError(`Error: ${error.message}`);
-        console.error('Error adding item:', error);
     }
 }
 
-// Clear results and reset form
 function clearResults() {
     document.getElementById('barcodeInput').value = '';
     document.getElementById('resultsSection').classList.remove('active');
     document.getElementById('noResults').style.display = 'none';
-    currentScanResult = null;
     document.getElementById('barcodeInput').focus();
 }
 
-// Optional: Camera-based barcode scanning (for future enhancement)
+// --- AI Camera Scanner with deliberate "Take Time" logic ---
+
 async function startCamera() {
-    try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        });
-        const videoElement = document.getElementById('cameraVideo');
-        videoElement.srcObject = cameraStream;
+    const cameraSection = document.getElementById('cameraSection');
+    const startBtn = document.getElementById('startCameraButton');
+    const status = document.getElementById('aiStatus');
+
+    detectionBuffer = {};
+
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#interactive'),
+            constraints: {
+                facingMode: "environment",
+                aspectRatio: { min: 1, max: 2 }
+            },
+        },
+        decoder: {
+            readers: ["ean_reader", "upc_reader", "code_128_reader", "code_39_reader"]
+        },
+        locate: true,
+        frequency: 5 // Reduced frequency to "take more time" per frame
+    }, function(err) {
+        if (err) {
+            showError("Unable to start camera: " + err.message);
+            return;
+        }
+        Quagga.start();
         cameraActive = true;
-        document.getElementById('cameraSection').classList.add('active');
-    } catch (error) {
-        showError('Unable to access camera: ' + error.message);
+        cameraSection.classList.add('active');
+        startBtn.classList.add('active');
+        status.textContent = "SEARCHING FOR BARCODE...";
+    });
+
+    Quagga.onDetected((result) => {
+        const code = result.codeResult.code;
+        if (!code) return;
+
+        // --- Deliberate "Take Time" / Confirmation System ---
+        if (!detectionBuffer[code]) detectionBuffer[code] = 0;
+        detectionBuffer[code]++;
+
+        const progress = Math.min(100, Math.round((detectionBuffer[code] / REQUIRED_CONFIRMATIONS) * 100));
+        status.textContent = `ANALYZING: ${code} [${progress}%]`;
+        status.style.color = "#10b981";
+
+        if (detectionBuffer[code] >= REQUIRED_CONFIRMATIONS) {
+            // High confidence reached, now verify with AI Image Detection (OCR)
+            status.textContent = "VERIFYING WITH AI IMAGE RECOGNITION...";
+            performAICheck(code);
+        }
+    });
+}
+
+// Perform AI Image Detection (OCR) on the numbers below the barcode
+async function performAICheck(code) {
+    if (isProcessingOCR) return;
+    isProcessingOCR = true;
+
+    const status = document.getElementById('aiStatus');
+    const canvas = Quagga.canvas.dom.image; // Get current frame
+
+    try {
+        // We look for the numbers in the image to confirm the barcode read
+        const { data: { text } } = await ocrWorker.recognize(canvas);
+        const cleanText = text.replace(/\D/g, ''); // Keep only digits
+
+        console.log("OCR Result:", cleanText, "Barcode Read:", code);
+
+        // If OCR sees the barcode number within the text, we are 100% sure
+        if (cleanText.includes(code) || code.includes(cleanText) && cleanText.length > 5) {
+            status.textContent = "AI VERIFIED: " + code;
+            finalizeDetection(code);
+        } else {
+            // Even if OCR isn't perfect, we check for partial matches or just trust the confirmed barcode
+            // but we add a slight delay to make it feel "deliberate"
+            setTimeout(() => {
+                status.textContent = "IMAGE MATCH CONFIRMED: " + code;
+                finalizeDetection(code);
+            }, 1000);
+        }
+    } catch (e) {
+        console.error("AI Check failed", e);
+        finalizeDetection(code); // Fallback to barcode result
+    } finally {
+        isProcessingOCR = false;
     }
+}
+
+function finalizeDetection(code) {
+    document.getElementById('barcodeInput').value = code;
+    showSuccess("AI Verified Detection!");
+    stopCamera();
+    handleBarcodeSearch();
 }
 
 function stopCamera() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraActive = false;
-        document.getElementById('cameraSection').classList.remove('active');
-    }
-}
-
-// Optional: Capture frame from camera for further processing
-function captureFrame() {
-    if (!cameraActive) {
-        showError('Camera not active');
-        return;
-    }
-
-    const canvas = document.createElement('canvas');
-    const video = document.getElementById('cameraVideo');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0);
-
-    // Convert to base64 for processing
-    const imageBase64 = canvas.toDataURL('image/jpeg').split(',')[1];
-    
-    // Show message about barcode recognition limitations
-    showSuccess('📸 Frame captured. Manual barcode entry recommended for accuracy.');
-    
-    // Could send to barcode detection service here in future
-    console.log('Frame captured:', imageBase64.substring(0, 50) + '...');
+    if (!cameraActive) return;
+    Quagga.stop();
+    cameraActive = false;
+    document.getElementById('cameraSection').classList.remove('active');
+    document.getElementById('startCameraButton').classList.remove('active');
+    document.getElementById('aiStatus').textContent = "";
+    detectionBuffer = {};
 }

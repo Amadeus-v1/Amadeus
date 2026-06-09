@@ -1,0 +1,302 @@
+Index: front-end/add-item.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>Amadeus - Add Item</title>\r\n    <link rel=\"stylesheet\" href=\"style.css\">\r\n</head>\r\n<body>\r\n    <div class=\"dashboard-wrapper\">\r\n        <nav class=\"navbar\">\r\n            <div class=\"nav-container\">\r\n                <div class=\"nav-brand\">\r\n                    <h1>\uD83C\uDFAD Amadeus</h1>\r\n                </div>\r\n                <div class=\"nav-menu\">\r\n                    <div class=\"theme-toggle-container\">\r\n                        <span class=\"theme-label\">Mode</span>\r\n                        <label class=\"switch\">\r\n                            <input type=\"checkbox\" id=\"themeCheckbox\">\r\n                            <span class=\"slider\"></span>\r\n                        </label>\r\n                    </div>\r\n                    <span id=\"userGreeting\" class=\"nav-user\">Welcome!</span>\r\n                    <button id=\"logoutBtn\" class=\"btn btn-secondary\">Logout</button>\r\n                </div>\r\n            </div>\r\n        </nav>\r\n\r\n        <div class=\"dashboard-container\">\r\n            <div class=\"breadcrumb\" style=\"margin-bottom: 24px;\">\r\n                <a href=\"dashboard.html\" style=\"color: var(--accent); text-decoration: none; font-weight: 700;\">← Back to Dashboard</a>\r\n            </div>\r\n\r\n            <header class=\"dashboard-header\">\r\n                <h1>\uD83D\uDCDA Add New Item</h1>\r\n                <p>Add a new item to your physical media collection</p>\r\n            </header>\r\n\r\n            <main class=\"dashboard-main\">\r\n                <div class=\"feature-section\" style=\"text-align: center; border-color: var(--accent);\">\r\n                    <h3 style=\"margin-bottom: 12px;\">⚡ Quick Barcode Lookup</h3>\r\n                    <p style=\"margin-bottom: 20px; color: var(--text);\">Use your camera or a scanner for instant item lookup</p>\r\n                    <a href=\"barcode.html\" class=\"btn btn-primary\" style=\"text-decoration: none;\">\uD83D\uDCF1 Go to Barcode Scanner</a>\r\n                </div>\r\n\r\n                <form id=\"addItemForm\">\r\n                    <div class=\"feature-section\">\r\n                        <h2>Basic Information</h2>\r\n                        <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;\">\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemTitle\">Title *</label>\r\n                                <input type=\"text\" id=\"itemTitle\" placeholder=\"e.g., The Great Gatsby\" required>\r\n                            </div>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemMediaType\">Media Type *</label>\r\n                                <select id=\"itemMediaType\" required>\r\n                                    <option value=\"\">Select media type...</option>\r\n                                    <option value=\"Book\">\uD83D\uDCD6 Book</option>\r\n                                    <option value=\"Vinyl\">\uD83C\uDFB5 Vinyl Record</option>\r\n                                    <option value=\"CD\">\uD83D\uDCBF CD</option>\r\n                                    <option value=\"DVD\">\uD83C\uDFAC DVD</option>\r\n                                    <option value=\"Blu-ray\">\uD83D\uDCC0 Blu-ray</option>\r\n                                    <option value=\"Cassette\">\uD83D\uDCFC Cassette Tape</option>\r\n                                    <option value=\"Video Game\">\uD83C\uDFAE Video Game</option>\r\n                                    <option value=\"Collectible\">✨ Collectible</option>\r\n                                    <option value=\"Comic\">\uD83D\uDCAD Comic/Manga</option>\r\n                                    <option value=\"Other\">\uD83D\uDCE6 Other</option>\r\n                                </select>\r\n                            </div>\r\n                        </div>\r\n                        <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;\">\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemArtistAuthor\">Artist / Author</label>\r\n                                <input type=\"text\" id=\"itemArtistAuthor\" placeholder=\"e.g., Pink Floyd\">\r\n                            </div>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemReleaseDate\">Release Date</label>\r\n                                <input type=\"date\" id=\"itemReleaseDate\">\r\n                            </div>\r\n                        </div>\r\n                        <div class=\"form-group\">\r\n                            <label for=\"itemDescription\">Notes</label>\r\n                            <textarea id=\"itemDescription\" placeholder=\"Add personal notes...\" rows=\"4\"></textarea>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <div class=\"feature-section\">\r\n                        <h2>Media & Cover</h2>\r\n                        <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;\">\r\n                            <div style=\"display: flex; flex-direction: column; gap: 20px;\">\r\n                                <div class=\"form-group\">\r\n                                    <label for=\"itemCoverFile\">Upload Image</label>\r\n                                    <input type=\"file\" id=\"itemCoverFile\" accept=\"image/*\">\r\n                                </div>\r\n                                <div style=\"display: flex; align-items: center; gap: 16px;\">\r\n                                    <hr style=\"flex: 1; border: none; border-top: 1px solid var(--border);\">\r\n                                    <span style=\"color: var(--muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;\">or URL</span>\r\n                                    <hr style=\"flex: 1; border: none; border-top: 1px solid var(--border);\">\r\n                                </div>\r\n                                <div class=\"form-group\">\r\n                                    <label for=\"itemCoverUrl\">Image URL</label>\r\n                                    <input type=\"url\" id=\"itemCoverUrl\" placeholder=\"https://example.com/image.jpg\">\r\n                                </div>\r\n                            </div>\r\n                            <div id=\"coverPreviewContainer\" style=\"display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px;\">\r\n                                <span style=\"color: var(--muted); font-size: 0.8rem;\">Preview</span>\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <div class=\"feature-section\">\r\n                        <h2>Details & Condition</h2>\r\n                        <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;\">\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemCondition\">Condition *</label>\r\n                                <select id=\"itemCondition\" required>\r\n                                    <option value=\"\">Select condition...</option>\r\n                                    <option value=\"Mint\">Mint</option>\r\n                                    <option value=\"Near Mint\">Near Mint</option>\r\n                                    <option value=\"Very Good\">Very Good</option>\r\n                                    <option value=\"Good\">Good</option>\r\n                                    <option value=\"Fair\">Fair</option>\r\n                                    <option value=\"Poor\">Poor</option>\r\n                                </select>\r\n                            </div>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemQuantity\">Quantity *</label>\r\n                                <input type=\"number\" id=\"itemQuantity\" value=\"1\" min=\"1\" required>\r\n                            </div>\r\n                        </div>\r\n                        <div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;\">\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemEstimatedValue\">Value ($)</label>\r\n                                <input type=\"number\" id=\"itemEstimatedValue\" placeholder=\"0.00\" step=\"0.01\" min=\"0\">\r\n                            </div>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"itemFormat\">Format</label>\r\n                                <input type=\"text\" id=\"itemFormat\" placeholder=\"e.g., Hardcover\">\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <div style=\"display: flex; gap: 16px; margin-top: 32px;\">\r\n                        <button type=\"submit\" class=\"btn btn-primary\">Add to Collection</button>\r\n                        <button type=\"reset\" class=\"btn btn-secondary\">Clear</button>\r\n                    </div>\r\n\r\n                    <div id=\"formMessage\" class=\"error-message hidden\"></div>\r\n                </form>\r\n            </main>\r\n        </div>\r\n\r\n        <footer class=\"dashboard-footer\">\r\n            <p>\uD83C\uDFAD Amadeus - Your Collection Companion</p>\r\n        </footer>\r\n    </div>\r\n\r\n    <script src=\"theme.js\"></script>\r\n    <script src=\"add-item.js\"></script>\r\n</body>\r\n</html>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/front-end/add-item.html b/front-end/add-item.html
+--- a/front-end/add-item.html	(revision 07fa762132a9e575e68ad6a4cc75dca968b41f4d)
++++ b/front-end/add-item.html	(date 1781009494691)
+@@ -5,6 +5,8 @@
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Amadeus - Add Item</title>
+     <link rel="stylesheet" href="style.css">
++    <!-- Include Quagga2 for barcode scanning -->
++    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+ </head>
+ <body>
+     <div class="dashboard-wrapper">
+@@ -38,10 +40,26 @@
+             </header>
+ 
+             <main class="dashboard-main">
+-                <div class="feature-section" style="text-align: center; border-color: var(--accent);">
++                <div class="feature-section" style="text-align: center; border-color: var(--accent); position: relative; overflow: hidden;">
+                     <h3 style="margin-bottom: 12px;">⚡ Quick Barcode Lookup</h3>
+-                    <p style="margin-bottom: 20px; color: var(--text);">Use your camera or a scanner for instant item lookup</p>
+-                    <a href="barcode.html" class="btn btn-primary" style="text-decoration: none;">📱 Go to Barcode Scanner</a>
++                    <p style="margin-bottom: 20px; color: var(--text);">Use your camera for instant item lookup</p>
++
++                    <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;">
++                        <button id="startScanBtn" class="btn btn-primary">📷 Start Camera Scanner</button>
++                        <a href="barcode.html" class="btn btn-secondary" style="text-decoration: none;">🔍 Go to Search Page</a>
++                    </div>
++
++                    <!-- Hidden Camera Section -->
++                    <div id="cameraSection" class="hidden" style="margin-top: 20px;">
++                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
++                            <h3 style="margin: 0; font-size: 0.9rem;">📹 Live Scanner</h3>
++                            <button id="stopScanBtn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.7rem; color: #ff4444; border-color: #ff4444;">Close</button>
++                        </div>
++                        <div id="interactive" class="scanner-viewport" style="height: 300px;">
++                            <div class="scanner-laser"></div>
++                        </div>
++                        <div id="scanStatus" style="margin-top: 10px; font-size: 0.85rem; color: var(--accent); font-weight: bold;"></div>
++                    </div>
+                 </div>
+ 
+                 <form id="addItemForm">
+Index: front-end/add-item.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const API_BASE_URL = 'http://localhost:8080/api';\r\n\r\n// Check if user is logged in\r\nfunction checkAuth() {\r\n    const userId = localStorage.getItem('userId');\r\n    if (!userId) {\r\n        window.location.href = 'login.html';\r\n        return false;\r\n    }\r\n    return true;\r\n}\r\n\r\n// Initialize page\r\ndocument.addEventListener('DOMContentLoaded', () => {\r\n    if (!checkAuth()) return;\r\n\r\n    const username = localStorage.getItem('username');\r\n    document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;\r\n\r\n    // Setup event listeners\r\n    document.getElementById('logoutBtn').addEventListener('click', logout);\r\n    document.getElementById('addItemForm').addEventListener('submit', handleAddItem);\r\n    \r\n    // Live preview for cover URL\r\n    const coverUrlInput = document.getElementById('itemCoverUrl');\r\n    if (coverUrlInput) {\r\n        coverUrlInput.addEventListener('input', updateCoverPreview);\r\n    }\r\n});\r\n\r\n// Update cover preview\r\nfunction updateCoverPreview() {\r\n    const url = document.getElementById('itemCoverUrl').value.trim();\r\n    const previewContainer = document.getElementById('coverPreviewContainer');\r\n    \r\n    if (url) {\r\n        previewContainer.innerHTML = `<img src=\"${url}\" alt=\"Preview\" style=\"max-height: 100%; max-width: 100%; border-radius: 4px;\" onerror=\"this.parentElement.innerHTML='<span style=\\'color: #ff4444; font-size: 0.8rem;\\'>Invalid Image URL</span>'\">`;\r\n    } else {\r\n        previewContainer.innerHTML = `<span style=\"color: var(--muted); font-size: 0.8rem;\">Image Preview</span>`;\r\n    }\r\n}\r\n\r\n// Logout handler\r\nfunction logout() {\r\n    if (confirm('Are you sure you want to logout?')) {\r\n        localStorage.removeItem('currentUser');\r\n        localStorage.removeItem('userId');\r\n        localStorage.removeItem('username');\r\n        window.location.href = 'login.html';\r\n    }\r\n}\r\n\r\n// Show form message\r\nfunction showFormMessage(message, type = 'success') {\r\n    const messageEl = document.getElementById('formMessage');\r\n    messageEl.textContent = message;\r\n    messageEl.className = `error-message ${type === 'success' ? '' : 'active'}`;\r\n    if (type === 'success') {\r\n        messageEl.style.backgroundColor = '#10b981';\r\n        messageEl.style.display = 'block';\r\n        messageEl.classList.remove('hidden');\r\n    } else {\r\n        messageEl.style.backgroundColor = '#ff4444';\r\n        messageEl.style.display = 'block';\r\n        messageEl.classList.remove('hidden');\r\n    }\r\n    \r\n    if (type === 'success') {\r\n        setTimeout(() => {\r\n            window.location.href = 'collection.html';\r\n        }, 1500);\r\n    }\r\n}\r\n\r\n// Handle add item form submission\r\nasync function handleAddItem(e) {\r\n    e.preventDefault();\r\n\r\n    const userId = localStorage.getItem('userId');\r\n    const title = document.getElementById('itemTitle').value.trim();\r\n    const mediaType = document.getElementById('itemMediaType').value;\r\n    const condition = document.getElementById('itemCondition').value;\r\n    const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;\r\n    const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;\r\n    const coverUrl = document.getElementById('itemCoverUrl').value.trim();\r\n\r\n    if (!title || !mediaType || !condition) {\r\n        showFormMessage('Please fill in all required fields', 'error');\r\n        return;\r\n    }\r\n\r\n    const releaseDate = document.getElementById('itemReleaseDate').value;\r\n    const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : 0;\r\n\r\n    // Build item object with all details\r\n    const itemData = {\r\n        title: title,\r\n        mediaType: mediaType,\r\n        artistAuthor: document.getElementById('itemArtistAuthor').value.trim(),\r\n        releaseYear: releaseYear,\r\n        description: document.getElementById('itemDescription').value.trim(),\r\n        condition: condition,\r\n        format: document.getElementById('itemFormat').value.trim(),\r\n        quantity: quantity,\r\n        estimatedValue: estimatedValue,\r\n        coverUrl: coverUrl,\r\n        dateAdded: new Date().toISOString()\r\n    };\r\n\r\n    console.log('[add-item.js] Sending item data:', itemData);\r\n\r\n    try {\r\n        const response = await fetch(`${API_BASE_URL}/collection/add`, {\r\n            method: 'POST',\r\n            headers: { 'Content-Type': 'application/json' },\r\n            body: JSON.stringify({\r\n                userId: userId,\r\n                title: title,\r\n                coverUrl: coverUrl, // Send at top level too for MediaStore.addItem\r\n                collection: itemData\r\n            })\r\n        });\r\n\r\n        const data = await response.json();\r\n\r\n        if (!response.ok) {\r\n            showFormMessage(data.message || 'Failed to add item', 'error');\r\n            return;\r\n        }\r\n\r\n        showFormMessage('✓ Item added successfully! Redirecting...', 'success');\r\n    } catch (error) {\r\n        showFormMessage(`Error: ${error.message}`, 'error');\r\n        console.error('Error adding item:', error);\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/front-end/add-item.js b/front-end/add-item.js
+--- a/front-end/add-item.js	(revision 07fa762132a9e575e68ad6a4cc75dca968b41f4d)
++++ b/front-end/add-item.js	(date 1781009510599)
+@@ -26,7 +26,111 @@
+     if (coverUrlInput) {
+         coverUrlInput.addEventListener('input', updateCoverPreview);
+     }
++
++    // Camera Scanner Setup
++    const startScanBtn = document.getElementById('startScanBtn');
++    if (startScanBtn) {
++        startScanBtn.addEventListener('click', startCamera);
++    }
++
++    const stopScanBtn = document.getElementById('stopScanBtn');
++    if (stopScanBtn) {
++        stopScanBtn.addEventListener('click', stopCamera);
++    }
+ });
++
++let cameraActive = false;
++
++async function startCamera() {
++    if (cameraActive) return;
++
++    const cameraSection = document.getElementById('cameraSection');
++    const scanStatus = document.getElementById('scanStatus');
++
++    if (scanStatus) scanStatus.textContent = "Initializing camera...";
++
++    Quagga.init({
++        inputStream: {
++            name: "Live",
++            type: "LiveStream",
++            target: document.querySelector('#interactive'),
++            constraints: {
++                facingMode: "environment",
++                aspectRatio: { min: 1, max: 2 }
++            },
++        },
++        decoder: {
++            readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader", "code_39_reader"]
++        },
++        locate: true,
++        frequency: 10
++    }, function(err) {
++        if (err) {
++            console.error(err);
++            if (scanStatus) scanStatus.textContent = "Error: " + err.message;
++            return;
++        }
++        Quagga.start();
++        cameraActive = true;
++        cameraSection.classList.remove('hidden');
++        if (scanStatus) scanStatus.textContent = "📷 Scanning... Center the barcode";
++    });
++
++    Quagga.onDetected(async (result) => {
++        const code = result.codeResult.code;
++        if (code) {
++            if (scanStatus) scanStatus.textContent = "✨ Barcode found: " + code;
++            stopCamera();
++            lookupBarcode(code);
++        }
++    });
++}
++
++function stopCamera() {
++    if (!cameraActive) return;
++    Quagga.stop();
++    cameraActive = false;
++    document.getElementById('cameraSection').classList.add('hidden');
++}
++
++async function lookupBarcode(barcode) {
++    const scanStatus = document.getElementById('scanStatus');
++    if (scanStatus) scanStatus.textContent = "🔍 Looking up " + barcode + "...";
++
++    try {
++        const response = await fetch(`${API_BASE_URL}/catalog/barcode`, {
++            method: 'POST',
++            headers: { 'Content-Type': 'application/json' },
++            body: JSON.stringify({ barcode: barcode })
++        });
++
++        const data = await response.json();
++
++        if (response.ok && data.success) {
++            // Fill form with data
++            document.getElementById('itemTitle').value = data.title || '';
++            document.getElementById('itemArtistAuthor').value = data.artist || '';
++            document.getElementById('itemMediaType').value = data.mediaType || '';
++            document.getElementById('itemFormat').value = data.format || '';
++            document.getElementById('itemCoverUrl').value = data.coverUrl || '';
++
++            if (data.year) {
++                // Approximate date since we only have year
++                document.getElementById('itemReleaseDate').value = `${data.year}-01-01`;
++            }
++
++            updateCoverPreview();
++            if (scanStatus) scanStatus.textContent = "✅ Item found and loaded!";
++            showFormMessage('✓ Item details loaded from barcode', 'success', false);
++        } else {
++            if (scanStatus) scanStatus.textContent = "❌ Item not found. Please enter manually.";
++            showFormMessage('Barcode not found in database', 'error');
++        }
++    } catch (error) {
++        if (scanStatus) scanStatus.textContent = "❌ Error looking up barcode";
++        console.error('Error scanning barcode:', error);
++    }
++}
+ 
+ // Update cover preview
+ function updateCoverPreview() {
+@@ -51,24 +155,31 @@
+ }
+ 
+ // Show form message
+-function showFormMessage(message, type = 'success') {
++function showFormMessage(message, type = 'success', redirect = true) {
+     const messageEl = document.getElementById('formMessage');
+     messageEl.textContent = message;
+-    messageEl.className = `error-message ${type === 'success' ? '' : 'active'}`;
++
+     if (type === 'success') {
+         messageEl.style.backgroundColor = '#10b981';
+-        messageEl.style.display = 'block';
++        messageEl.classList.add('active');
+         messageEl.classList.remove('hidden');
++        messageEl.style.display = 'block';
+     } else {
+         messageEl.style.backgroundColor = '#ff4444';
+-        messageEl.style.display = 'block';
++        messageEl.classList.add('active');
+         messageEl.classList.remove('hidden');
++        messageEl.style.display = 'block';
+     }
+     
+-    if (type === 'success') {
++    if (type === 'success' && redirect) {
+         setTimeout(() => {
+             window.location.href = 'collection.html';
+         }, 1500);
++    } else {
++        setTimeout(() => {
++            messageEl.classList.add('hidden');
++            messageEl.style.display = 'none';
++        }, 3000);
+     }
+ }
+ 
+Index: front-end/barcode.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>Amadeus - Barcode Scanner</title>\r\n    <link rel=\"stylesheet\" href=\"style.css\">\r\n    <!-- Include Quagga2 for barcode scanning -->\r\n    <script src=\"https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js\"></script>\r\n</head>\r\n<body>\r\n    <div class=\"dashboard-wrapper\">\r\n        <nav class=\"navbar\">\r\n            <div class=\"nav-container\">\r\n                <div class=\"nav-brand\">\r\n                    <h1>\uD83C\uDFAD Amadeus</h1>\r\n                </div>\r\n                <div class=\"nav-menu\">\r\n                    <div class=\"theme-toggle-container\">\r\n                        <span class=\"theme-label\">Mode</span>\r\n                        <label class=\"switch\">\r\n                            <input type=\"checkbox\" id=\"themeCheckbox\">\r\n                            <span class=\"slider\"></span>\r\n                        </label>\r\n                    </div>\r\n                    <span id=\"userGreeting\" class=\"nav-user\">Welcome!</span>\r\n                    <button id=\"logoutBtn\" class=\"btn btn-secondary\">Logout</button>\r\n                </div>\r\n            </div>\r\n        </nav>\r\n\r\n        <div class=\"dashboard-container\">\r\n            <div class=\"breadcrumb\" style=\"margin-bottom: 24px;\">\r\n                <a href=\"dashboard.html\" style=\"color: var(--accent); text-decoration: none; font-weight: 700;\">← Back to Dashboard</a>\r\n            </div>\r\n\r\n            <header class=\"dashboard-header\">\r\n                <h1>\uD83D\uDCF1 Barcode Scanner</h1>\r\n                <p>Scan a physical barcode or enter the number manually</p>\r\n            </header>\r\n\r\n            <main class=\"dashboard-main\">\r\n                <div style=\"max-width: 600px; margin: 0 auto;\">\r\n                    <div id=\"errorMessage\" class=\"error-message hidden\"></div>\r\n                    <div id=\"successMessage\" class=\"error-message hidden\" style=\"background-color: #10b981;\"></div>\r\n\r\n                    <!-- Scanner Toggle -->\r\n                    <div class=\"feature-section\" style=\"text-align: center;\">\r\n                        <button id=\"toggleCameraButton\" class=\"btn btn-primary btn-full\" style=\"padding: 20px; font-size: 1.1rem; margin-bottom: 12px;\">\r\n                            \uD83D\uDCF7 Open Camera Scanner\r\n                        </button>\r\n                        <p style=\"font-size: 0.85rem; color: var(--muted);\">Point your camera at a barcode to scan automatically</p>\r\n                    </div>\r\n\r\n                    <!-- Camera Viewport -->\r\n                    <div id=\"cameraSection\" class=\"feature-section hidden\" style=\"padding: 10px; position: relative;\">\r\n                        <div style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px;\">\r\n                            <h3 style=\"margin: 0; font-size: 1rem;\">\uD83D\uDCF9 Live Scanner</h3>\r\n                            <button id=\"stopCameraButton\" class=\"btn btn-secondary\" style=\"padding: 4px 12px; font-size: 0.8rem; color: #ff4444; border-color: #ff4444;\">Close Camera</button>\r\n                        </div>\r\n                        <div id=\"interactive\" class=\"viewport\" style=\"height: 350px;\">\r\n                            <div class=\"scanner-laser\"></div>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <!-- Manual Input (Always available as fallback) -->\r\n                    <div class=\"feature-section\">\r\n                        <h3 style=\"margin-bottom: 16px; font-size: 1rem;\">⌨\uFE0F Manual Search</h3>\r\n                        <div style=\"display: flex; gap: 12px;\">\r\n                            <input \r\n                                type=\"text\" \r\n                                id=\"barcodeInput\" \r\n                                placeholder=\"Enter barcode number...\"\r\n                                style=\"flex: 2; font-family: monospace; font-size: 1.1rem;\"\r\n                            >\r\n                            <button id=\"scanButton\" class=\"btn btn-secondary\" style=\"flex: 1;\">Search</button>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <!-- Results -->\r\n                    <div id=\"resultsSection\" class=\"hidden\">\r\n                        <h2 style=\"margin-bottom: 24px;\">✨ Match Found</h2>\r\n                        <div id=\"resultsList\"></div>\r\n                    </div>\r\n\r\n                    <div id=\"noResults\" class=\"feature-section hidden\" style=\"text-align: center;\">\r\n                        <p style=\"margin-bottom: 16px;\">We couldn't find an item with that barcode.</p>\r\n                        <div style=\"display: flex; gap: 12px; justify-content: center;\">\r\n                            <a href=\"add-item.html\" class=\"btn btn-primary\">Add Manually</a>\r\n                            <button class=\"btn btn-secondary\" onclick=\"clearResults()\">Try Another</button>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </main>\r\n        </div>\r\n\r\n        <footer class=\"dashboard-footer\">\r\n            <p>\uD83C\uDFAD Amadeus - Your Collection Companion</p>\r\n        </footer>\r\n    </div>\r\n\r\n    <script src=\"theme.js\"></script>\r\n    <script src=\"barcode.js\"></script>\r\n</body>\r\n</html>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/front-end/barcode.html b/front-end/barcode.html
+--- a/front-end/barcode.html	(revision 07fa762132a9e575e68ad6a4cc75dca968b41f4d)
++++ b/front-end/barcode.html	(date 1781009452716)
+@@ -58,7 +58,7 @@
+                             <h3 style="margin: 0; font-size: 1rem;">📹 Live Scanner</h3>
+                             <button id="stopCameraButton" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; color: #ff4444; border-color: #ff4444;">Close Camera</button>
+                         </div>
+-                        <div id="interactive" class="viewport" style="height: 350px;">
++                        <div id="interactive" class="scanner-viewport">
+                             <div class="scanner-laser"></div>
+                         </div>
+                     </div>
+Index: front-end/barcode.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const API_BASE_URL = 'http://localhost:8080/api';\r\n\r\nlet currentScanResult = null;\r\nlet cameraActive = false;\r\nlet scannerInterval = null;\r\n\r\n// Check if user is logged in\r\nfunction checkAuth() {\r\n    const userId = localStorage.getItem('userId');\r\n    if (!userId) {\r\n        window.location.href = 'login.html';\r\n        return false;\r\n    }\r\n    return true;\r\n}\r\n\r\n// Initialize page\r\ndocument.addEventListener('DOMContentLoaded', () => {\r\n    if (!checkAuth()) return;\r\n\r\n    const username = localStorage.getItem('username');\r\n    const userGreeting = document.getElementById('userGreeting');\r\n    if (userGreeting) userGreeting.textContent = `Welcome, ${username}!`;\r\n\r\n    // Setup event listeners\r\n    document.getElementById('logoutBtn').addEventListener('click', logout);\r\n    document.getElementById('scanButton').addEventListener('click', handleBarcodeSearch);\r\n    document.getElementById('barcodeInput').addEventListener('keypress', (e) => {\r\n        if (e.key === 'Enter') {\r\n            handleBarcodeSearch();\r\n        }\r\n    });\r\n\r\n    const toggleBtn = document.getElementById('toggleCameraButton');\r\n    if (toggleBtn) toggleBtn.addEventListener('click', toggleCamera);\r\n    \r\n    const stopBtn = document.getElementById('stopCameraButton');\r\n    if (stopBtn) stopBtn.addEventListener('click', stopCamera);\r\n\r\n    // Focus on the input field for immediate scanning\r\n    document.getElementById('barcodeInput').focus();\r\n});\r\n\r\n// Logout handler\r\nfunction logout() {\r\n    if (confirm('Are you sure you want to logout?')) {\r\n        stopCamera();\r\n        localStorage.removeItem('currentUser');\r\n        localStorage.removeItem('userId');\r\n        localStorage.removeItem('username');\r\n        window.location.href = 'login.html';\r\n    }\r\n}\r\n\r\n// Show error message\r\nfunction showError(message) {\r\n    const errorEl = document.getElementById('errorMessage');\r\n    errorEl.textContent = message;\r\n    errorEl.classList.remove('hidden');\r\n    errorEl.style.display = 'block';\r\n    setTimeout(() => {\r\n        errorEl.classList.add('hidden');\r\n        errorEl.style.display = 'none';\r\n    }, 5000);\r\n}\r\n\r\n// Show success message\r\nfunction showSuccess(message) {\r\n    const successEl = document.getElementById('successMessage');\r\n    successEl.textContent = message;\r\n    successEl.classList.remove('hidden');\r\n    successEl.style.display = 'block';\r\n    setTimeout(() => {\r\n        successEl.classList.remove('hidden');\r\n        successEl.style.display = 'none';\r\n    }, 3000);\r\n}\r\n\r\n// Handle barcode search\r\nasync function handleBarcodeSearch() {\r\n    let barcode = document.getElementById('barcodeInput').value.trim();\r\n\r\n    // Clean up barcode\r\n    barcode = barcode.replace(/[- _.]/g, '');\r\n\r\n    if (!barcode) {\r\n        showError('Please enter or scan a barcode');\r\n        return;\r\n    }\r\n\r\n    const scanButton = document.getElementById('scanButton');\r\n    scanButton.disabled = true;\r\n    const originalText = scanButton.innerHTML;\r\n    scanButton.innerHTML = 'Searching...';\r\n\r\n    try {\r\n        const response = await fetch(`${API_BASE_URL}/catalog/barcode`, {\r\n            method: 'POST',\r\n            headers: { 'Content-Type': 'application/json' },\r\n            body: JSON.stringify({ barcode: barcode })\r\n        });\r\n\r\n        const data = await response.json();\r\n\r\n        if (response.ok && data.success) {\r\n            displayResults([data]);\r\n            currentScanResult = data;\r\n            showSuccess('✓ Item found!');\r\n            if (cameraActive) stopCamera();\r\n        } else {\r\n            displayNoResults();\r\n            currentScanResult = null;\r\n        }\r\n    } catch (error) {\r\n        showError(`Error: ${error.message}`);\r\n        console.error('Error scanning barcode:', error);\r\n    } finally {\r\n        scanButton.disabled = false;\r\n        scanButton.innerHTML = originalText;\r\n    }\r\n}\r\n\r\n// Display search results\r\nfunction displayResults(results) {\r\n    const resultsSection = document.getElementById('resultsSection');\r\n    const resultsList = document.getElementById('resultsList');\r\n    const noResults = document.getElementById('noResults');\r\n\r\n    noResults.classList.add('hidden');\r\n    resultsList.innerHTML = '';\r\n\r\n    results.forEach((item) => {\r\n        const resultHtml = `\r\n            <div class=\"result-item-card\">\r\n                <div class=\"result-cover\">\r\n                    ${item.coverUrl ? `<img src=\"${item.coverUrl}\" alt=\"${item.title}\">` : `<div style=\"height: 150px; background: var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem;\">\uD83D\uDCE6</div>`}\r\n                </div>\r\n                <div class=\"result-details\">\r\n                    <h3 style=\"margin-bottom: 4px;\">${item.title || 'Unknown Title'}</h3>\r\n                    ${item.artist ? `<p class=\"item-artist\">\uD83D\uDC64 ${item.artist}</p>` : ''}\r\n                    \r\n                    <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; font-size: 0.9rem;\">\r\n                        <div><strong>Type:</strong> ${item.mediaType || 'N/A'}</div>\r\n                        <div><strong>Year:</strong> ${item.year || 'N/A'}</div>\r\n                        <div><strong>Format:</strong> ${item.format || 'N/A'}</div>\r\n                        <div><strong>Barcode:</strong> ${item.barcode || 'N/A'}</div>\r\n                    </div>\r\n\r\n                    <div style=\"display: flex; gap: 12px; flex-wrap: wrap;\">\r\n                        <button class=\"btn btn-primary\" onclick='addItemFromBarcode(${JSON.stringify(item).replace(/'/g, \"&apos;\")})'>\r\n                            ✓ Add to Collection\r\n                        </button>\r\n                        <button class=\"btn btn-secondary\" onclick=\"clearResults()\">\r\n                            \uD83D\uDD04 Scan Again\r\n                        </button>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n        `;\r\n        resultsList.insertAdjacentHTML('beforeend', resultHtml);\r\n    });\r\n\r\n    resultsSection.classList.remove('hidden');\r\n    resultsSection.scrollIntoView({ behavior: 'smooth' });\r\n}\r\n\r\nfunction displayNoResults() {\r\n    document.getElementById('resultsSection').classList.add('hidden');\r\n    document.getElementById('noResults').classList.remove('hidden');\r\n}\r\n\r\nasync function addItemFromBarcode(itemData) {\r\n    const userId = localStorage.getItem('userId');\r\n    const collectionData = {\r\n        title: itemData.title || '',\r\n        mediaType: itemData.mediaType || 'Other',\r\n        artistAuthor: itemData.artist || '',\r\n        description: `Added via barcode scan (${itemData.source || 'api'})`,\r\n        condition: 'Good',\r\n        format: itemData.format || '',\r\n        quantity: 1,\r\n        dateAdded: new Date().toISOString(),\r\n        barcode: itemData.barcode || '',\r\n        coverUrl: itemData.coverUrl || ''\r\n    };\r\n\r\n    try {\r\n        const response = await fetch(`${API_BASE_URL}/collection/add`, {\r\n            method: 'POST',\r\n            headers: { 'Content-Type': 'application/json' },\r\n            body: JSON.stringify({\r\n                userId: userId,\r\n                title: itemData.title || 'Unknown',\r\n                coverUrl: itemData.coverUrl || '',\r\n                collection: collectionData\r\n            })\r\n        });\r\n\r\n        if (response.ok) {\r\n            showSuccess('✓ Item added to collection!');\r\n            setTimeout(() => { window.location.href = 'collection.html'; }, 1500);\r\n        } else {\r\n            const data = await response.json();\r\n            showError(data.message || 'Failed to add item');\r\n        }\r\n    } catch (error) {\r\n        showError(`Error: ${error.message}`);\r\n    }\r\n}\r\n\r\nfunction clearResults() {\r\n    document.getElementById('barcodeInput').value = '';\r\n    document.getElementById('resultsSection').classList.add('hidden');\r\n    document.getElementById('noResults').classList.add('hidden');\r\n    document.getElementById('barcodeInput').focus();\r\n}\r\n\r\n// --- Camera Scanner Implementation ---\r\n\r\nasync function toggleCamera() {\r\n    if (cameraActive) {\r\n        stopCamera();\r\n    } else {\r\n        startCamera();\r\n    }\r\n}\r\n\r\nasync function startCamera() {\r\n    const cameraSection = document.getElementById('cameraSection');\r\n    const toggleBtn = document.getElementById('toggleCameraButton');\r\n    \r\n    // 1. Try Native BarcodeDetector API first (Fastest, if available)\r\n    if ('BarcodeDetector' in window) {\r\n        try {\r\n            const formats = await BarcodeDetector.getSupportedFormats();\r\n            if (formats.length > 0) {\r\n                console.log('Native BarcodeDetector supported');\r\n                startNativeScanner();\r\n                return;\r\n            }\r\n        } catch (e) {\r\n            console.warn('Native BarcodeDetector failed, falling back to Quagga', e);\r\n        }\r\n    }\r\n\r\n    // 2. Fallback to Quagga2\r\n    startQuaggaScanner();\r\n}\r\n\r\nfunction startQuaggaScanner() {\r\n    const cameraSection = document.getElementById('cameraSection');\r\n    const toggleBtn = document.getElementById('toggleCameraButton');\r\n\r\n    Quagga.init({\r\n        inputStream: {\r\n            name: \"Live\",\r\n            type: \"LiveStream\",\r\n            target: document.querySelector('#interactive'),\r\n            constraints: {\r\n                facingMode: \"environment\",\r\n                width: { min: 640 },\r\n                height: { min: 480 }\r\n            },\r\n        },\r\n        decoder: {\r\n            readers: [\"ean_reader\", \"upc_reader\", \"code_128_reader\", \"code_39_reader\"]\r\n        },\r\n        locate: true\r\n    }, function(err) {\r\n        if (err) {\r\n            showError(\"Unable to start camera: \" + err.message);\r\n            return;\r\n        }\r\n        Quagga.start();\r\n        cameraActive = true;\r\n        cameraSection.classList.remove('hidden');\r\n        toggleBtn.textContent = \"\uD83D\uDCF7 Close Camera Scanner\";\r\n    });\r\n\r\n    Quagga.onDetected((result) => {\r\n        const code = result.codeResult.code;\r\n        if (code) {\r\n            document.getElementById('barcodeInput').value = code;\r\n            showSuccess(\"Barcode detected!\");\r\n            stopCamera();\r\n            handleBarcodeSearch();\r\n        }\r\n    });\r\n}\r\n\r\nasync function startNativeScanner() {\r\n    const cameraSection = document.getElementById('cameraSection');\r\n    const toggleBtn = document.getElementById('toggleCameraButton');\r\n    const viewport = document.querySelector('#interactive');\r\n    \r\n    try {\r\n        const stream = await navigator.mediaDevices.getUserMedia({ \r\n            video: { facingMode: 'environment' } \r\n        });\r\n        \r\n        const video = document.createElement('video');\r\n        video.srcObject = stream;\r\n        video.setAttribute('playsinline', true);\r\n        video.style.width = '100%';\r\n        video.style.height = '100%';\r\n        video.style.objectFit = 'cover';\r\n        viewport.appendChild(video);\r\n        await video.play();\r\n\r\n        const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'upc_e', 'code_128'] });\r\n        \r\n        cameraActive = true;\r\n        cameraSection.classList.remove('hidden');\r\n        toggleBtn.textContent = \"\uD83D\uDCF7 Close Camera Scanner\";\r\n\r\n        scannerInterval = setInterval(async () => {\r\n            if (!cameraActive) return;\r\n            try {\r\n                const barcodes = await barcodeDetector.detect(video);\r\n                if (barcodes.length > 0) {\r\n                    const code = barcodes[0].rawValue;\r\n                    document.getElementById('barcodeInput').value = code;\r\n                    showSuccess(\"Barcode detected!\");\r\n                    stopCamera();\r\n                    handleBarcodeSearch();\r\n                }\r\n            } catch (e) {\r\n                console.error('Detection error', e);\r\n            }\r\n        }, 500);\r\n\r\n        // Store stream on viewport to stop it later\r\n        viewport.stream = stream;\r\n\r\n    } catch (err) {\r\n        showError(\"Camera access denied.\");\r\n    }\r\n}\r\n\r\nfunction stopCamera() {\r\n    if (!cameraActive) return;\r\n    \r\n    // Stop Quagga\r\n    try { Quagga.stop(); } catch(e) {}\r\n    \r\n    // Stop Native Scanner\r\n    if (scannerInterval) {\r\n        clearInterval(scannerInterval);\r\n        scannerInterval = null;\r\n    }\r\n    \r\n    const viewport = document.querySelector('#interactive');\r\n    if (viewport.stream) {\r\n        viewport.stream.getTracks().forEach(track => track.stop());\r\n        viewport.stream = null;\r\n    }\r\n    \r\n    // Clean viewport\r\n    viewport.innerHTML = '<div class=\"scanner-laser\"></div>';\r\n    \r\n    cameraActive = false;\r\n    document.getElementById('cameraSection').classList.add('hidden');\r\n    document.getElementById('toggleCameraButton').textContent = \"\uD83D\uDCF7 Open Camera Scanner\";\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/front-end/barcode.js b/front-end/barcode.js
+--- a/front-end/barcode.js	(revision 07fa762132a9e575e68ad6a4cc75dca968b41f4d)
++++ b/front-end/barcode.js	(date 1781009482470)
+@@ -129,7 +129,8 @@
+     noResults.classList.add('hidden');
+     resultsList.innerHTML = '';
+ 
+-    results.forEach((item) => {
++    results.forEach((item, index) => {
++        const itemJson = btoa(JSON.stringify(item));
+         const resultHtml = `
+             <div class="result-item-card">
+                 <div class="result-cover">
+@@ -147,7 +148,7 @@
+                     </div>
+ 
+                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+-                        <button class="btn btn-primary" onclick='addItemFromBarcode(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
++                        <button class="btn btn-primary" onclick="addItemByIndex('${itemJson}')">
+                             ✓ Add to Collection
+                         </button>
+                         <button class="btn btn-secondary" onclick="clearResults()">
+@@ -169,6 +170,16 @@
+     document.getElementById('noResults').classList.remove('hidden');
+ }
+ 
++function addItemByIndex(base64Data) {
++    try {
++        const itemData = JSON.parse(atob(base64Data));
++        addItemFromBarcode(itemData);
++    } catch (e) {
++        console.error('Error parsing item data', e);
++        showError('Failed to process item data');
++    }
++}
++
+ async function addItemFromBarcode(itemData) {
+     const userId = localStorage.getItem('userId');
+     const collectionData = {
+@@ -258,14 +269,24 @@
+             target: document.querySelector('#interactive'),
+             constraints: {
+                 facingMode: "environment",
+-                width: { min: 640 },
+-                height: { min: 480 }
++                aspectRatio: { min: 1, max: 2 }
+             },
+         },
+         decoder: {
+-            readers: ["ean_reader", "upc_reader", "code_128_reader", "code_39_reader"]
++            readers: [
++                "ean_reader",
++                "ean_8_reader",
++                "upc_reader",
++                "upc_e_reader",
++                "code_128_reader",
++                "code_39_reader",
++                "code_39_vin_reader",
++                "codabar_reader",
++                "i2of5_reader"
++            ]
+         },
+-        locate: true
++        locate: true,
++        frequency: 10
+     }, function(err) {
+         if (err) {
+             showError("Unable to start camera: " + err.message);
