@@ -58,8 +58,14 @@
                             <h3 style="margin: 0; font-size: 1rem;">📹 Live Scanner</h3>
                             <button id="stopCameraButton" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; color: #ff4444; border-color: #ff4444;">Close Camera</button>
                         </div>
-                        <div id="interactive" class="viewport" style="height: 350px;">
+                        <div id="interactive" class="viewport" style="height: 350px; position: relative;">
                             <div class="scanner-laser"></div>
+                            <div id="scannerStatus" class="scanner-status-overlay hidden">
+                                <div class="status-content">
+                                    <div class="status-spinner"></div>
+                                    <span id="statusMessage">Evaluating...</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

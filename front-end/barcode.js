@@ -4,6 +4,12 @@ let currentScanResult = null;
 let cameraActive = false;
 let scannerInterval = null;
 
+// Evaluation state
+let pendingBarcode = null;
+let detectionStartTime = 0;
+const EVALUATION_TIME = 5000; // 5 seconds
+let evaluationActive = false;
+
 // Check if user is logged in
 function checkAuth() {
     const userId = localStorage.getItem('userId');
@@ -71,7 +77,7 @@ function showSuccess(message) {
     successEl.classList.remove('hidden');
     successEl.style.display = 'block';
     setTimeout(() => {
-        successEl.classList.remove('hidden');
+        successEl.classList.add('hidden');
         successEl.style.display = 'none';
     }, 3000);
 }
@@ -229,6 +235,11 @@ async function startCamera() {
     const cameraSection = document.getElementById('cameraSection');
     const toggleBtn = document.getElementById('toggleCameraButton');
     
+    // Reset evaluation state
+    pendingBarcode = null;
+    detectionStartTime = 0;
+    evaluationActive = false;
+
     // 1. Try Native BarcodeDetector API first (Fastest, if available)
     if ('BarcodeDetector' in window) {
         try {
@@ -245,6 +256,45 @@ async function startCamera() {
 
     // 2. Fallback to Quagga2
     startQuaggaScanner();
+}
+
+/**
+ * Handles the logic for confirming a barcode by making sure it's visible for 5 seconds.
+ */
+function handleDetection(code) {
+    if (!cameraActive) return;
+
+    if (code === pendingBarcode) {
+        const now = Date.now();
+        const elapsed = now - detectionStartTime;
+        
+        updateScannerStatus(`Evaluating ISBN... ${(elapsed / 1000).toFixed(1)}s`, true);
+
+        if (elapsed >= EVALUATION_TIME) {
+            document.getElementById('barcodeInput').value = code;
+            showSuccess("Barcode verified!");
+            updateScannerStatus("Verified!", false);
+            stopCamera();
+            handleBarcodeSearch();
+        }
+    } else {
+        // New code detected or code changed
+        pendingBarcode = code;
+        detectionStartTime = Date.now();
+        updateScannerStatus(`Focusing on ${code}...`, true);
+    }
+}
+
+function updateScannerStatus(message, visible) {
+    const statusOverlay = document.getElementById('scannerStatus');
+    const statusText = document.getElementById('statusMessage');
+    
+    if (visible) {
+        statusText.textContent = message;
+        statusOverlay.classList.remove('hidden');
+    } else {
+        statusOverlay.classList.add('hidden');
+    }
 }
 
 function startQuaggaScanner() {
@@ -280,10 +330,15 @@ function startQuaggaScanner() {
     Quagga.onDetected((result) => {
         const code = result.codeResult.code;
         if (code) {
-            document.getElementById('barcodeInput').value = code;
-            showSuccess("Barcode detected!");
-            stopCamera();
-            handleBarcodeSearch();
+            handleDetection(code);
+        }
+    });
+    
+    // Reset if nothing is detected
+    Quagga.onProcessed((result) => {
+        if (!result || !result.codeResult) {
+            // Optional: reset evaluation if code is lost? 
+            // Better to just wait a bit before resetting to handle flickers
         }
     });
 }
@@ -318,16 +373,15 @@ async function startNativeScanner() {
             try {
                 const barcodes = await barcodeDetector.detect(video);
                 if (barcodes.length > 0) {
-                    const code = barcodes[0].rawValue;
-                    document.getElementById('barcodeInput').value = code;
-                    showSuccess("Barcode detected!");
-                    stopCamera();
-                    handleBarcodeSearch();
+                    handleDetection(barcodes[0].rawValue);
+                } else {
+                    // If nothing detected for a moment, maybe slow down or reset?
+                    // For now, let's keep the pending code for a short grace period
                 }
             } catch (e) {
                 console.error('Detection error', e);
             }
-        }, 500);
+        }, 200); // Check more frequently for better evaluation tracking
 
         // Store stream on viewport to stop it later
         viewport.stream = stream;
@@ -339,6 +393,8 @@ async function startNativeScanner() {
 
 function stopCamera() {
     if (!cameraActive) return;
+    
+    updateScannerStatus("", false);
     
     // Stop Quagga
     try { Quagga.stop(); } catch(e) {}
