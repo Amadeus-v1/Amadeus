@@ -40,7 +40,7 @@
             </header>
 
             <main class="dashboard-main">
-                <div style="max-width: 600px; margin: 0 auto;">
+                <div class="scanner-page-shell">
                     <div id="errorMessage" class="error-message hidden"></div>
                     <div id="successMessage" class="error-message hidden" style="background-color: #10b981;"></div>
 
@@ -53,13 +53,12 @@
                     </div>
 
                     <!-- Camera Viewport -->
-                    <div id="cameraSection" class="feature-section hidden" style="padding: 10px; position: relative;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+                    <div id="cameraSection" class="feature-section camera-section hidden">
+                        <div class="camera-section-header">
                             <h3 style="margin: 0; font-size: 1rem;">📹 Live Scanner</h3>
                             <button id="stopCameraButton" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; color: #ff4444; border-color: #ff4444;">Close Camera</button>
                         </div>
-                        <div id="interactive" class="viewport" style="height: 350px; position: relative;">
-                            <div class="scanner-laser"></div>
+                        <div id="interactive" class="viewport">
                             <div id="scannerStatus" class="scanner-status-overlay hidden">
                                 <div class="status-content">
                                     <div class="status-spinner"></div>
@@ -72,14 +71,14 @@
                     <!-- Manual Input (Always available as fallback) -->
                     <div class="feature-section">
                         <h3 style="margin-bottom: 16px; font-size: 1rem;">⌨️ Manual Search</h3>
-                        <div style="display: flex; gap: 12px;">
+                        <div class="barcode-manual-row">
                             <input 
                                 type="text" 
                                 id="barcodeInput" 
                                 placeholder="Enter barcode number..."
-                                style="flex: 2; font-family: monospace; font-size: 1.1rem;"
+                                style="font-family: monospace; font-size: 1.1rem;"
                             >
-                            <button id="scanButton" class="btn btn-secondary" style="flex: 1;">Search</button>
+                            <button id="scanButton" class="btn btn-secondary">Search</button>
                         </div>
                     </div>
 
@@ -91,7 +90,7 @@
 
                     <div id="noResults" class="feature-section hidden" style="text-align: center;">
                         <p style="margin-bottom: 16px;">We couldn't find an item with that barcode.</p>
-                        <div style="display: flex; gap: 12px; justify-content: center;">
+                        <div class="button-row-center">
                             <a href="add-item.html" class="btn btn-primary">Add Manually</a>
                             <button class="btn btn-secondary" onclick="clearResults()">Try Another</button>
                         </div>

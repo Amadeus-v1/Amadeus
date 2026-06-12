@@ -308,8 +308,8 @@ function startQuaggaScanner() {
             target: document.querySelector('#interactive'),
             constraints: {
                 facingMode: "environment",
-                width: { min: 640 },
-                height: { min: 480 }
+                width: { ideal: 640 },
+                height: { ideal: 480 }
             },
         },
         decoder: {
@@ -356,6 +356,7 @@ async function startNativeScanner() {
         const video = document.createElement('video');
         video.srcObject = stream;
         video.setAttribute('playsinline', true);
+        video.className = 'scanner-video';
         video.style.width = '100%';
         video.style.height = '100%';
         video.style.objectFit = 'cover';
@@ -411,8 +412,15 @@ function stopCamera() {
         viewport.stream = null;
     }
     
-    // Clean viewport
-    viewport.innerHTML = '<div class="scanner-laser"></div>';
+    // Clean viewport while preserving the scanner UI used on the next open.
+    viewport.innerHTML = `
+        <div id="scannerStatus" class="scanner-status-overlay hidden">
+            <div class="status-content">
+                <div class="status-spinner"></div>
+                <span id="statusMessage">Evaluating...</span>
+            </div>
+        </div>
+    `;
     
     cameraActive = false;
     document.getElementById('cameraSection').classList.add('hidden');

@@ -73,10 +73,17 @@ function displayItems(items) {
     container.innerHTML = items.map(item => {
         const hasCover = item.coverUrl && item.coverUrl.trim() !== '';
         const mediaIcon = getMediaIcon(item.mediaType);
+        const isPrivate = item.visibility === 'private';
         
         return `
             <div class="collection-item-card">
                 <div class="item-actions">
+                    <button class="btn-icon" 
+                            onclick="toggleVisibility('${item.id}', '${item.visibility}')" 
+                            title="Click to make ${isPrivate ? 'Public' : 'Private'}"
+                            style="margin-right: 4px; font-size: 0.9rem; background: ${isPrivate ? 'rgba(255,68,68,0.1)' : 'rgba(16,185,129,0.1)'};">
+                        ${isPrivate ? '🔒' : '🔓'}
+                    </button>
                     <a href="edit-item.html?id=${item.id}" class="btn-icon" title="Edit item" style="text-decoration: none; font-size: 1rem;">✏️</a>
                 </div>
                 <div class="item-media-icon" onclick="openItemModal('${item.id}')" style="cursor: pointer;">
@@ -100,6 +107,36 @@ function displayItems(items) {
             </div>
         `;
     }).join('');
+}
+
+// Toggle item visibility
+async function toggleVisibility(itemId, currentVisibility) {
+    const userId = localStorage.getItem('userId');
+    const newVisibility = currentVisibility === 'private' ? 'public' : 'private';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/collection/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                itemId: itemId,
+                visibility: newVisibility
+            })
+        });
+
+        if (response.ok) {
+            // Update local state and redraw
+            const item = allItems.find(i => i.id === itemId);
+            if (item) item.visibility = newVisibility;
+            displayItems(allItems);
+        } else {
+            alert('Failed to update visibility');
+        }
+    } catch (error) {
+        console.error('Error toggling visibility:', error);
+        alert('Network error while updating visibility');
+    }
 }
 
 // Display empty state
@@ -214,6 +251,7 @@ function openItemModal(itemId) {
         <div class="modal-item-details" style="color: var(--text);">
             ${hasCover ? `<img src="${item.coverUrl}" alt="${escapeHtml(item.title)}" class="modal-image">` : ''}
             <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div><strong>Visibility:</strong> ${item.visibility === 'private' ? '🔒 Private' : '🔓 Public'}</div>
                 <div><strong>Media Type:</strong> ${item.mediaType}</div>
                 ${item.artistAuthor ? `<div><strong>Artist/Author:</strong> ${escapeHtml(item.artistAuthor)}</div>` : ''}
                 ${item.year ? `<div><strong>Year:</strong> ${item.year}</div>` : ''}

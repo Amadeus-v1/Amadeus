@@ -29,25 +29,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const cameraSection = document.getElementById('cameraSection');
     const urlSection = document.getElementById('urlSection');
     
-    useCameraBtn.addEventListener('click', () => {
-        cameraSection.classList.remove('hidden');
-        urlSection.classList.add('hidden');
-        startCamera();
-    });
+    if (useCameraBtn) {
+        useCameraBtn.addEventListener('click', () => {
+            cameraSection.classList.remove('hidden');
+            urlSection.classList.add('hidden');
+            startCamera();
+        });
+    }
 
-    useUrlBtn.addEventListener('click', () => {
-        cameraSection.classList.add('hidden');
-        urlSection.classList.remove('hidden');
-        stopCamera();
-    });
+    if (useUrlBtn) {
+        useUrlBtn.addEventListener('click', () => {
+            cameraSection.classList.add('hidden');
+            urlSection.classList.remove('hidden');
+            stopCamera();
+        });
+    }
 
     // Camera Controls
-    document.getElementById('captureBtn').addEventListener('click', capturePhoto);
-    document.getElementById('closeCameraBtn').addEventListener('click', () => {
-        cameraSection.classList.add('hidden');
-        urlSection.classList.remove('hidden');
-        stopCamera();
-    });
+    const captureBtn = document.getElementById('captureBtn');
+    if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
+    
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', () => {
+            cameraSection.classList.add('hidden');
+            urlSection.classList.remove('hidden');
+            stopCamera();
+        });
+    }
 
     // Live preview for cover URL
     const coverUrlInput = document.getElementById('itemCoverUrl');
@@ -160,6 +169,7 @@ async function handleAddItem(e) {
     const condition = document.getElementById('itemCondition').value;
     const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
     const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
+    const visibility = document.getElementById('itemVisibility') ? document.getElementById('itemVisibility').value : 'public';
     
     // Use captured image OR url input
     const urlInput = document.getElementById('itemCoverUrl').value.trim();
@@ -185,7 +195,8 @@ async function handleAddItem(e) {
         quantity: quantity,
         estimatedValue: estimatedValue,
         coverUrl: coverUrl,
-        dateAdded: new Date().toISOString()
+        dateAdded: new Date().toISOString(),
+        visibility: visibility
     };
 
     console.log('[add-item.js] Sending item data:', itemData);
@@ -198,6 +209,7 @@ async function handleAddItem(e) {
                 userId: userId,
                 title: title,
                 coverUrl: coverUrl,
+                visibility: visibility,
                 collection: itemData
             })
         });

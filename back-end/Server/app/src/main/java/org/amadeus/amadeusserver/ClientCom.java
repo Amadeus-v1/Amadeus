@@ -438,6 +438,31 @@ public class ClientCom {
         sendJsonResponse(exchange, 200, response);
     }
 
+    public static void handleFriendCollectionRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        String friendId = processQuery(exchange.getRequestURI().getQuery(), "friendId");
+
+        if (userId == null || friendId == null) {
+            sendError(exchange, 400, "Missing userId or friendId parameter");
+            return;
+        }
+
+        if (!FriendsStore.isFriend(userId, friendId)) {
+            sendError(exchange, 403, "You are not friends with this user");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("friendId", friendId);
+        response.put("items", MediaStore.listPublicCollection(friendId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
     public static void handleMarketplaceCreateListingRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");

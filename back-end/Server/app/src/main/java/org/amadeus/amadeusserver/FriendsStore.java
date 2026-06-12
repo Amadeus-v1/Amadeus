@@ -122,64 +122,27 @@ public class FriendsStore {
         }
     }
 
-    public static JSONArray getFriendsCollections(String userId) {
+    public static boolean isFriend(String userId, String friendId) {
         try {
             initialize();
-            String sql = """
-                    SELECT f.friendId,
-                           m.id,
-                           m.title,
-                           m.artist,
-                           m.mediaType,
-                           m.format,
-                           m.year,
-                           m.coverUrl,
-                           c.conditionLabel,
-                           c.ownIt,
-                           c.notes,
-                           c.addedAt
-                    FROM friendships f
-                    JOIN collection_items c ON c.userId = f.friendId
-                    JOIN media_items m ON m.id = c.itemId
-                    WHERE f.userId = ? AND f.status = 'accepted'
-                    ORDER BY c.addedAt DESC;
-                    """;
-
+            String sql = "SELECT status FROM friendships WHERE userId = ? AND friendId = ? AND status = 'accepted'";
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, userId);
+                statement.setString(2, friendId);
                 try (ResultSet resultSet = statement.executeQuery()) {
-                    JSONArray items = new JSONArray();
-                    while (resultSet.next()) {
-                        JSONObject item = new JSONObject();
-                        String fId = resultSet.getString("friendId");
-                        item.put("friendId", fId);
-                        
-                        // Resolve username
-                        JSONObject user = UserStore.findById(fId);
-                        if (user != null) {
-                            item.put("friendUsername", user.optString("username", "Unknown User"));
-                        } else {
-                            item.put("friendUsername", "User (" + (fId.length() > 8 ? fId.substring(0, 8) : fId) + ")");
-                        }
-                        
-                        item.put("id", resultSet.getString("id"));
-                        item.put("title", resultSet.getString("title"));
-                        item.put("artist", resultSet.getString("artist"));
-                        item.put("mediaType", resultSet.getString("mediaType"));
-                        item.put("format", resultSet.getString("format"));
-                        item.put("year", resultSet.getInt("year"));
-                        item.put("coverUrl", resultSet.getString("coverUrl"));
-                        item.put("conditionLabel", resultSet.getString("conditionLabel"));
-                        item.put("ownIt", resultSet.getInt("ownIt") == 1);
-                        item.put("notes", resultSet.getString("notes"));
-                        item.put("addedAt", resultSet.getString("addedAt"));
-                        items.put(item);
-                    }
-                    return items;
+                    return resultSet.next();
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch friends' collections", e);
+            return false;
         }
+    }
+
+    /**
+     * Deprecated: User wants to hide recent activity feed in favor of direct friend collection viewing.
+     * Returns an empty array to satisfy "Dont show recent items in the friends page" requirement.
+     */
+    public static JSONArray getFriendsCollections(String userId) {
+        return new JSONArray();
     }
 }

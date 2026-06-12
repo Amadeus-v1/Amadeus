@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load initial data
     loadFriends();
-    loadFriendsCollections();
 });
 
 // Logout handler
@@ -97,12 +96,13 @@ async function loadFriends() {
 
         if (data.friends && data.friends.length > 0) {
             friendsList.innerHTML = data.friends.map(friend => `
-                <div class="action-card" style="min-height: auto; padding: 20px; flex-direction: row; justify-content: flex-start; text-align: left;">
-                    <div style="font-size: 2rem; margin-right: 16px;">👤</div>
-                    <div>
-                        <div class="action-title" style="font-size: 1.1rem;">${escapeHtml(friend.username || friend.friendId)}</div>
-                        <div class="action-desc">${friend.accepted ? 'Following' : 'Pending'}</div>
+                <div class="friend-card" onclick="viewFriendCollection('${friend.friendId}', '${escapeHtml(friend.username)}')" style="cursor: pointer; transition: transform 0.2s;">
+                    <div class="friend-avatar" aria-hidden="true">👤</div>
+                    <div class="friend-summary">
+                        <div class="friend-name">${escapeHtml(friend.username || friend.friendId)}</div>
+                        <div class="friend-status">${friend.accepted ? 'Following' : 'Pending'}</div>
                     </div>
+                    <div style="margin-left: auto; color: var(--accent); font-weight: bold;">View Collection →</div>
                 </div>
             `).join('');
         } else {
@@ -114,51 +114,9 @@ async function loadFriends() {
     }
 }
 
-// Load friends' collections
-async function loadFriendsCollections() {
-    const userId = localStorage.getItem('userId');
-    const container = document.getElementById('friendsCollectionContainer');
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/friends/collections?userId=${encodeURIComponent(userId)}`);
-        const data = await response.json();
-
-        if (data.items && data.items.length > 0) {
-            container.innerHTML = data.items.map(item => `
-                <div class="collection-item-card">
-                    <div class="item-media-icon">
-                        ${item.coverUrl ? `<img src="${item.coverUrl}" alt="${item.title}">` : getMediaIcon(item.mediaType)}
-                    </div>
-                    <div class="item-content">
-                        <h3>${escapeHtml(item.title)}</h3>
-                        <p class="item-artist">${escapeHtml(item.artist || '')}</p>
-                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--muted);">
-                            Owner: <strong>${escapeHtml(item.friendUsername || item.friendId)}</strong>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">No updates from friends yet.</p>';
-        }
-    } catch (error) {
-        console.error('Error loading friends collections:', error);
-        container.innerHTML = '<p class="error-message">Error loading friend updates.</p>';
-    }
-}
-
-function getMediaIcon(mediaType) {
-    const icons = {
-        'Book': '📖',
-        'Vinyl': '🎵',
-        'CD': '💿',
-        'DVD': '🎬',
-        'Blu-ray': '📀',
-        'Cassette': '📼',
-        'Video Game': '🎮',
-        'Collectible': '✨'
-    };
-    return icons[mediaType] || '📦';
+// View a specific friend's collection
+function viewFriendCollection(friendId, friendUsername) {
+    window.location.href = `friend-collection.html?friendId=${encodeURIComponent(friendId)}&username=${encodeURIComponent(friendUsername)}`;
 }
 
 function escapeHtml(text) {

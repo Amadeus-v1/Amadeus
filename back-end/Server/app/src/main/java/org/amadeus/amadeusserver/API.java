@@ -53,7 +53,7 @@ public class API {
         server.createContext("/api/collection/delete", addCORSHeaders(ClientCom::handleCollectionDeleteRequest));
         server.createContext("/api/friends/add", addCORSHeaders(ClientCom::handleFriendsAddRequest));
         server.createContext("/api/friends/list", addCORSHeaders(ClientCom::handleFriendsListRequest));
-        server.createContext("/api/friends/collections", addCORSHeaders(ClientCom::handleFriendsCollectionsRequest));
+        server.createContext("/api/friends/collection", addCORSHeaders(ClientCom::handleFriendCollectionRequest));
         server.createContext("/api/marketplace/list", addCORSHeaders(ClientCom::handleMarketplaceListRequest));
         server.createContext("/api/marketplace/active", addCORSHeaders(ClientCom::handleMarketplaceActiveListingsRequest));
         server.createContext("/api/marketplace/create", addCORSHeaders(ClientCom::handleMarketplaceCreateListingRequest));
