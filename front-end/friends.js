@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load initial data
     loadFriends();
-    loadFriendsCollections();
 });
 
 // Logout handler
@@ -140,6 +139,7 @@ async function loadFriends() {
     }
 }
 
+<<<<<<< HEAD
 // Load friends' collections
 async function loadFriendsCollections() {
     const userId = localStorage.getItem('userId');
@@ -189,6 +189,11 @@ function getMediaIcon(mediaType) {
         'Collectible': '✨'
     };
     return icons[mediaType] || '📦';
+}
+
+// View a specific friend's collection
+function viewFriendCollection(friendId, friendUsername) {
+    window.location.href = `friend-collection.html?friendId=${encodeURIComponent(friendId)}&username=${encodeURIComponent(friendUsername)}`;
 }
 
 function escapeHtml(text) {

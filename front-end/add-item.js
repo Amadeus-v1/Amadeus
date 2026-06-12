@@ -1,4 +1,6 @@
 const API_BASE_URL = 'http://localhost:8080/api';
+let capturedImageBase64 = null;
+let stream = null;
 
 let discogsAvailable = false;
 let discogsSearchTimeout = null;
@@ -24,6 +26,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('addItemForm').addEventListener('submit', handleAddItem);
     
+    // UI Source Toggles
+    const useCameraBtn = document.getElementById('useCameraBtn');
+    const useUrlBtn = document.getElementById('useUrlBtn');
+    const cameraSection = document.getElementById('cameraSection');
+    const urlSection = document.getElementById('urlSection');
+    
+    if (useCameraBtn) {
+        useCameraBtn.addEventListener('click', () => {
+            cameraSection.classList.remove('hidden');
+            urlSection.classList.add('hidden');
+            startCamera();
+        });
+    }
+
+    if (useUrlBtn) {
+        useUrlBtn.addEventListener('click', () => {
+            cameraSection.classList.add('hidden');
+            urlSection.classList.remove('hidden');
+            stopCamera();
+        });
+    }
+
+    // Camera Controls
+    const captureBtn = document.getElementById('captureBtn');
+    if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
+    
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', () => {
+            cameraSection.classList.add('hidden');
+            urlSection.classList.remove('hidden');
+            stopCamera();
+        });
+    }
+
     // Live preview for cover URL
     const coverUrlInput = document.getElementById('itemCoverUrl');
     if (coverUrlInput) {
@@ -221,6 +258,55 @@ function selectDiscogsResult(release) {
     document.getElementById('addItemForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// Camera Functions
+async function startCamera() {
+    const video = document.getElementById('cameraVideo');
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' }, 
+            audio: false 
+        });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error("Error accessing camera: ", err);
+        alert("Could not access camera. Please check permissions.");
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('photoCanvas');
+    const previewContainer = document.getElementById('coverPreviewContainer');
+    
+    // Match canvas size to video aspect ratio
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to Base64 (using JPEG for better compression)
+    capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Update Preview
+    previewContainer.innerHTML = `<img src="${capturedImageBase64}" alt="Captured" style="width: 100%; height: 100%; object-fit: cover;">`;
+    
+    // Show success state
+    stopCamera();
+    document.getElementById('cameraSection').classList.add('hidden');
+    document.getElementById('urlSection').classList.remove('hidden');
+    
+    // Clear URL input since we have a capture
+    document.getElementById('itemCoverUrl').value = "";
+}
+
 function getFormatIcon(format) {
     const f = format.toLowerCase();
     if (f.includes('vinyl') || f.includes('lp') || f.includes('12"') || f.includes('7"') || f.includes('10"')) return '🎵';
@@ -230,16 +316,14 @@ function getFormatIcon(format) {
     if (f.includes('blu-ray') || f.includes('blu ray')) return '📀';
     return '💿';
 }
-
-// Update cover preview
 function updateCoverPreview() {
     const url = document.getElementById('itemCoverUrl').value.trim();
     const previewContainer = document.getElementById('coverPreviewContainer');
-    
     if (url) {
-        previewContainer.innerHTML = `<img src="${url}" alt="Preview" style="max-height: 100%; max-width: 100%; border-radius: 4px;" onerror="this.parentElement.innerHTML='<span style=\\'color: #ff4444; font-size: 0.8rem;\\'>Invalid Image URL</span>'">`;
-    } else {
-        previewContainer.innerHTML = `<span style="color: var(--muted); font-size: 0.8rem;">Image Preview</span>`;
+        capturedImageBase64 = null; // Reset captured image if user starts typing a URL
+        previewContainer.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<span style=\\'color: #ff4444; font-size: 0.8rem;\\'>Invalid Image URL</span>'">`;
+    } else if (!capturedImageBase64) {
+        previewContainer.innerHTML = `<span style="color: var(--muted); font-size: 0.8rem;">Cover Preview</span>`;
     }
 }
 
@@ -285,7 +369,11 @@ async function handleAddItem(e) {
     const condition = document.getElementById('itemCondition').value;
     const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
     const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
-    const coverUrl = document.getElementById('itemCoverUrl').value.trim();
+    const visibility = document.getElementById('itemVisibility') ? document.getElementById('itemVisibility').value : 'public';
+    
+    // Use captured image OR url input
+    const urlInput = document.getElementById('itemCoverUrl').value.trim();
+    const coverUrl = capturedImageBase64 || urlInput;
 
     if (!title || !mediaType || !condition) {
         showFormMessage('Please fill in all required fields', 'error');
@@ -306,7 +394,8 @@ async function handleAddItem(e) {
         quantity: quantity,
         estimatedValue: estimatedValue,
         coverUrl: coverUrl,
-        dateAdded: new Date().toISOString()
+        dateAdded: new Date().toISOString(),
+        visibility: visibility
     };
 
     console.log('[add-item.js] Sending item data:', itemData);
@@ -319,6 +408,7 @@ async function handleAddItem(e) {
                 userId: userId,
                 title: title,
                 coverUrl: coverUrl,
+                visibility: visibility,
                 collection: itemData
             })
         });

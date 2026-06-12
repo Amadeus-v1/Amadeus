@@ -110,25 +110,48 @@
                     </div>
 
                     <div class="feature-section">
+                        <h2>Privacy & Visibility</h2>
+                        <div class="form-group">
+                            <label for="itemVisibility">Collection Visibility</label>
+                            <select id="itemVisibility">
+                                <option value="public">🔓 Public (Friends can see this item)</option>
+                                <option value="private">🔒 Private (Only you can see this item)</option>
+                            </select>
+                            <p style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">Private items are hidden from your friends on the Friends page.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-section">
                         <h2>Media & Cover</h2>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
                             <div style="display: flex; flex-direction: column; gap: 20px;">
                                 <div class="form-group">
-                                    <label for="itemCoverFile">Upload Image</label>
-                                    <input type="file" id="itemCoverFile" accept="image/*">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <hr style="flex: 1; border: none; border-top: 1px solid var(--border);">
-                                    <span style="color: var(--muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">or URL</span>
-                                    <hr style="flex: 1; border: none; border-top: 1px solid var(--border);">
-                                </div>
-                                <div class="form-group">
-                                    <label for="itemCoverUrl">Image URL</label>
-                                    <input type="url" id="itemCoverUrl" placeholder="https://example.com/image.jpg">
+                                    <label>Cover Source</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                        <button type="button" class="btn btn-secondary" id="useCameraBtn" style="flex: 1; padding: 10px; font-size: 0.8rem;">📷 Use Camera</button>
+                                        <button type="button" class="btn btn-secondary" id="useUrlBtn" style="flex: 1; padding: 10px; font-size: 0.8rem;">🔗 Image URL</button>
+                                    </div>
+                                    
+                                    <div id="cameraSection" class="hidden">
+                                        <div class="camera-preview-container">
+                                            <video id="cameraVideo" autoplay playsinline></video>
+                                            <div class="camera-controls">
+                                                <button type="button" class="btn btn-primary" id="captureBtn" style="padding: 10px 20px;">Capture Photo</button>
+                                                <button type="button" class="btn btn-secondary" id="closeCameraBtn" style="padding: 10px 20px;">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="urlSection">
+                                        <label for="itemCoverUrl" style="font-size: 0.75rem; color: var(--muted);">Image URL</label>
+                                        <input type="url" id="itemCoverUrl" placeholder="https://example.com/image.jpg">
+                                    </div>
+                                    
+                                    <canvas id="photoCanvas" class="hidden"></canvas>
                                 </div>
                             </div>
-                            <div id="coverPreviewContainer" style="display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px;">
-                                <span style="color: var(--muted); font-size: 0.8rem;">Preview</span>
+                            <div id="coverPreviewContainer" style="display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px; position: relative; overflow: hidden;">
+                                <span style="color: var(--muted); font-size: 0.8rem;">Cover Preview</span>
                             </div>
                         </div>
                     </div>

@@ -6,7 +6,9 @@ The Barcode Scanner feature allows users to quickly lookup and add media items t
 
 The barcode scanner integrates with multiple data sources to provide fast and accurate item lookup:
 - **Open Library API** - For book ISBNs (10 or 13 digits)
-- **Open Food Facts API** - For product barcodes with media-related items
+- **Discogs full database** - Local lookup against an imported Discogs release dump
+- **MusicBrainz API** - For music releases not found in the local Discogs index
+- **Open Food Facts API** - For remaining product barcodes
 - **Local Catalog** - Searches existing items in the Amadeus catalog
 
 ## API Endpoint
@@ -70,14 +72,37 @@ Search for media items by barcode.
 
 **Example ISBN-13:** 9780544720435
 
-### 2. Open Food Facts
+### 2. Discogs Full Database
+- Imports the Discogs monthly releases XML dump into a local SQLite index
+- Supports `discogs_*_releases.xml` and `discogs_*_releases.xml.gz`
+- Looks up UPC/EAN barcode identifiers without requiring a live Discogs API token
+- Source field: `"discogs"`
+
+**Import command:**
+```bash
+cd back-end/Server
+./gradlew :app:importDiscogs --args="/path/to/discogs_releases.xml.gz"
+```
+
+Set `-Damadeus.discogs.db.url=jdbc:sqlite:/absolute/path/discogsCatalog.db` for both import and server startup if you want the Discogs index outside the server working directory:
+
+```bash
+./gradlew :app:importDiscogs -Damadeus.discogs.db.url=jdbc:sqlite:/absolute/path/discogsCatalog.db --args="/path/to/discogs_releases.xml.gz"
+```
+
+### 3. MusicBrainz
+- Provides release information via barcode search
+- Good fallback for CDs, vinyl, and other music media
+- Source field: `"musicbrainz"`
+
+### 4. Open Food Facts
 - Provides product information via UPC/EAN
 - Can identify media formats (CD, DVD, Blu-ray, Video Game)
 - Source field: `"openfoodfacts"`
 
 **Example UPC:** 5099750066429
 
-### 3. Local Catalog
+### 5. Local Catalog
 - Searches existing Amadeus media catalog
 - Fallback option when external APIs don't match
 - Source field: `"local"`
@@ -110,7 +135,7 @@ Dashboard includes quick action buttons for:
 ## Response Fields Explained
 
 - **success**: Boolean indicating if item was found
-- **source**: Where the item data came from (isbn, openfoodfacts, local)
+- **source**: Where the item data came from (isbn, discogs, musicbrainz, openfoodfacts, local)
 - **barcode**: The barcode that was searched
 - **title**: Name/title of the media item
 - **artist**: Creator/author/brand
@@ -157,9 +182,20 @@ HTTP 405
 Main entry point that:
 1. Validates the barcode
 2. Attempts ISBN lookup for 10 or 13-digit codes
-3. Falls back to Open Food Facts
-4. Searches local catalog
-5. Returns best match or "not found" response
+3. Searches the locally imported Discogs full database
+4. Falls back to MusicBrainz
+5. Falls back to Open Food Facts
+6. Searches local catalog
+7. Returns best match or "not found" response
+
+#### `DiscogsStore.importReleases(Path releasesDumpPath)`
+- Streams the Discogs releases XML dump into `discogsCatalog.db`
+- Stores one row per release barcode identifier
+- Normalizes barcode punctuation and spacing for reliable UPC/EAN matching
+
+#### `DiscogsStore.lookupByBarcode(String barcode)`
+- Searches the local Discogs SQLite index by normalized barcode
+- Returns release title, artist, format, label, year, media type, and Discogs release ID
 
 #### `lookupISBN(String isbn)`
 - Queries Open Library API
@@ -229,10 +265,10 @@ if (result.success) {
 - ISBN lookup limited to 13-digit format validation
 - Open Food Facts not specifically tuned for media
 - No barcode image recognition (text entry only)
-- Limited to three data sources
+- Discogs importer currently indexes release-level barcode metadata only
 
 ### Potential Enhancements
-1. Add dedicated media barcode database (MusicBrainz, VideoGameDB)
+1. Add Discogs image/marketplace enrichment from additional dumps or authenticated APIs
 2. Implement barcode image scanning/recognition
 3. Crowd-source barcode data from user submissions
 4. Add caching for frequently-looked-up barcodes

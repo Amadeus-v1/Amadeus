@@ -125,6 +125,10 @@ function populateForm(item) {
     document.getElementById('itemBarcode').value = item.barcode || '';
     document.getElementById('itemCoverUrl').value = item.coverUrl || '';
     
+    if (document.getElementById('itemVisibility')) {
+        document.getElementById('itemVisibility').value = item.visibility || 'public';
+    }
+    
     // Trigger preview update
     updateCoverPreview();
 }
@@ -139,6 +143,7 @@ async function handleEditItem(e) {
     const condition = document.getElementById('itemCondition').value;
     const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
     const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
+    const visibility = document.getElementById('itemVisibility') ? document.getElementById('itemVisibility').value : 'public';
 
     if (!title || !mediaType) {
         showFormMessage('Please fill in all required fields', 'error');
@@ -159,7 +164,8 @@ async function handleEditItem(e) {
         format: document.getElementById('itemFormat').value.trim(),
         estimatedValue: estimatedValue,
         barcode: document.getElementById('itemBarcode').value.trim(),
-        coverUrl: document.getElementById('itemCoverUrl').value.trim()
+        coverUrl: document.getElementById('itemCoverUrl').value.trim(),
+        visibility: visibility
     };
 
     try {
