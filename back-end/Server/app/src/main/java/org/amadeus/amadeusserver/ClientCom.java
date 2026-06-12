@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -738,5 +739,386 @@ public class ClientCom {
         response.put("message", "User created");
         response.put("user", responseUser);
         sendJsonResponse(exchange, 201, response);
+    }
+
+    // ===== Discogs Data Handlers =====
+
+    public static void handleDiscogsSearchRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String query = processQuery(exchange.getRequestURI().getQuery(), "q");
+        if (query == null || query.isBlank()) {
+            sendError(exchange, 400, "Missing q parameter");
+            return;
+        }
+
+        String limitStr = processQuery(exchange.getRequestURI().getQuery(), "limit");
+        int limit = 25;
+        try { if (limitStr != null) limit = Integer.parseInt(limitStr); } catch (NumberFormatException ignored) {}
+
+        // URL-decode the query
+        query = java.net.URLDecoder.decode(query, java.nio.charset.StandardCharsets.UTF_8);
+
+        JSONObject response = new JSONObject();
+        response.put("query", query);
+        response.put("results", DiscogsStore.search(query, limit));
+        response.put("source", "discogs");
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleDiscogsStatusRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("available", DiscogsStore.isAvailable());
+        response.put("recordCount", DiscogsStore.getRecordCount());
+        response.put("importStatus", DiscogsImporter.getImportStatus());
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleDiscogsImportRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject result = DiscogsImporter.startImport();
+        sendJsonResponse(exchange, 202, result);
+    }
+
+    public static void handleDiscogsReleaseRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String idStr = processQuery(exchange.getRequestURI().getQuery(), "id");
+        if (idStr == null || idStr.isBlank()) {
+            sendError(exchange, 400, "Missing id parameter");
+            return;
+        }
+
+        int discogsId;
+        try {
+            discogsId = Integer.parseInt(idStr);
+        } catch (NumberFormatException e) {
+            sendError(exchange, 400, "Invalid id parameter");
+            return;
+        }
+
+        JSONObject release = DiscogsStore.getById(discogsId);
+        if (release == null) {
+            sendError(exchange, 404, "Release not found");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, new JSONObject().put("release", release));
+    }
+
+    public static void handleDiscogsRelatedRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String masterIdStr = processQuery(exchange.getRequestURI().getQuery(), "masterId");
+        if (masterIdStr == null || masterIdStr.isBlank()) {
+            sendError(exchange, 400, "Missing masterId parameter");
+            return;
+        }
+
+        int masterId;
+        try {
+            masterId = Integer.parseInt(masterIdStr);
+        } catch (NumberFormatException e) {
+            sendError(exchange, 400, "Invalid masterId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("masterId", masterId);
+        response.put("releases", DiscogsStore.getRelatedReleases(masterId, 50));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    // ===== Additional Marketplace Handlers =====
+
+    public static void handleMarketplaceCancelRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String listingId = requestJson.optString("listingId", "");
+        String sellerId = requestJson.optString("sellerId", "");
+
+        if (listingId.isBlank() || sellerId.isBlank()) {
+            sendError(exchange, 400, "Missing listingId or sellerId");
+            return;
+        }
+
+        try {
+            JSONObject result = MarketplaceStore.cancelListing(listingId, sellerId);
+            sendJsonResponse(exchange, 200, new JSONObject().put("message", "Listing cancelled").put("listing", result));
+        } catch (RuntimeException e) {
+            sendError(exchange, 400, e.getMessage());
+        }
+    }
+
+    public static void handleMarketplaceUserListingsRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("userId", userId);
+        response.put("listings", MarketplaceStore.getListingsWithDetails(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    // ===== Explore & Discovery Handlers =====
+
+    public static void handleDiscogsExploreRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String queryStr = exchange.getRequestURI().getQuery();
+        String q = processQuery(queryStr, "q");
+        String artist = processQuery(queryStr, "artist");
+        String genre = processQuery(queryStr, "genre");
+        String format = processQuery(queryStr, "format");
+        String country = processQuery(queryStr, "country");
+        int yearFrom = 0, yearTo = 0, offset = 0, limit = 20;
+
+        try {
+            String yf = processQuery(queryStr, "yearFrom");
+            if (yf != null && !yf.isBlank()) yearFrom = Integer.parseInt(yf);
+            String yt = processQuery(queryStr, "yearTo");
+            if (yt != null && !yt.isBlank()) yearTo = Integer.parseInt(yt);
+            String off = processQuery(queryStr, "offset");
+            if (off != null && !off.isBlank()) offset = Integer.parseInt(off);
+            String lim = processQuery(queryStr, "limit");
+            if (lim != null && !lim.isBlank()) limit = Integer.parseInt(lim);
+        } catch (NumberFormatException ignored) {}
+
+        JSONObject result = DiscogsStore.searchWithFilters(q, artist, genre, format, yearFrom, yearTo, country, offset, limit);
+        sendJsonResponse(exchange, 200, result);
+    }
+
+    public static void handleDiscogsArtistRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String name = processQuery(exchange.getRequestURI().getQuery(), "name");
+        if (name == null || name.isBlank()) {
+            sendError(exchange, 400, "Missing name parameter");
+            return;
+        }
+
+        String limitStr = processQuery(exchange.getRequestURI().getQuery(), "limit");
+        int limit = 100;
+        try { if (limitStr != null) limit = Integer.parseInt(limitStr); } catch (NumberFormatException ignored) {}
+
+        JSONArray releases = DiscogsStore.searchByArtist(name, limit);
+        JSONObject response = new JSONObject();
+        response.put("artist", name);
+        response.put("releases", releases);
+        response.put("count", releases.length());
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleDiscogsGenresRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+        JSONObject response = new JSONObject();
+        response.put("genres", DiscogsStore.getDistinctGenres());
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleDiscogsCountriesRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+        JSONObject response = new JSONObject();
+        response.put("countries", DiscogsStore.getDistinctCountries());
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    // ===== Cover Art Handler =====
+
+    public static void handleCoverRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        // Extract discogs ID from path: /api/covers/{id}
+        String path = exchange.getRequestURI().getPath();
+        String idStr = path.substring(path.lastIndexOf('/') + 1);
+        int discogsId;
+        try {
+            discogsId = Integer.parseInt(idStr);
+        } catch (NumberFormatException e) {
+            sendError(exchange, 400, "Invalid release ID");
+            return;
+        }
+
+        byte[] imageData = DiscogsCoverService.getCoverBytes(discogsId);
+        if (imageData == null) {
+            sendError(exchange, 404, "No cover image available");
+            return;
+        }
+
+        exchange.getResponseHeaders().set("Content-Type", "image/jpeg");
+        exchange.getResponseHeaders().set("Cache-Control", "public, max-age=86400");
+        exchange.sendResponseHeaders(200, imageData.length);
+        try (var os = exchange.getResponseBody()) {
+            os.write(imageData);
+        }
+    }
+
+    // ===== User Profile Handlers =====
+
+    public static void handleUserProfileRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject profile = UserStore.getPublicProfile(userId);
+        if (profile == null) {
+            sendError(exchange, 404, "User not found");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, profile);
+    }
+
+    public static void handleUserProfileUpdateRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String userId = requestJson.optString("userId", "");
+        if (userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId");
+            return;
+        }
+
+        UserStore.updateProfile(userId, requestJson);
+        JSONObject response = new JSONObject();
+        response.put("message", "Profile updated");
+        response.put("profile", UserStore.getPublicProfile(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleUserPublicProfileRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String username = processQuery(exchange.getRequestURI().getQuery(), "username");
+        if (username == null || username.isBlank()) {
+            sendError(exchange, 400, "Missing username parameter");
+            return;
+        }
+
+        JSONObject profile = UserStore.getPublicProfileByUsername(username);
+        if (profile == null) {
+            sendError(exchange, 404, "User not found");
+            return;
+        }
+
+        sendJsonResponse(exchange, 200, profile);
+    }
+
+    // ===== Admin Config Handlers =====
+
+    public static void handleAdminConfigRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("config", ConfigStore.getAll());
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleAdminConfigSetRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        String key = requestJson.optString("key", "");
+        String value = requestJson.optString("value", "");
+        if (key.isBlank()) {
+            sendError(exchange, 400, "Missing key");
+            return;
+        }
+
+        if (value.isBlank()) {
+            ConfigStore.delete(key);
+        } else {
+            ConfigStore.set(key, value);
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("message", "Config updated");
+        response.put("key", key);
+        sendJsonResponse(exchange, 200, response);
     }
 }

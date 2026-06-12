@@ -65,6 +65,35 @@ public class API {
         server.createContext("/api/user/create", addCORSHeaders(ClientCom::handleUserCreateRequest));
         server.createContext("/api/user/login", addCORSHeaders(ClientCom::handleUserLoginRequest));
 
+        // Discogs data endpoints
+        server.createContext("/api/discogs/search", addCORSHeaders(ClientCom::handleDiscogsSearchRequest));
+        server.createContext("/api/discogs/status", addCORSHeaders(ClientCom::handleDiscogsStatusRequest));
+        server.createContext("/api/discogs/import", addCORSHeaders(ClientCom::handleDiscogsImportRequest));
+        server.createContext("/api/discogs/release", addCORSHeaders(ClientCom::handleDiscogsReleaseRequest));
+        server.createContext("/api/discogs/related", addCORSHeaders(ClientCom::handleDiscogsRelatedRequest));
+
+        // Additional marketplace endpoints
+        server.createContext("/api/marketplace/cancel", addCORSHeaders(ClientCom::handleMarketplaceCancelRequest));
+        server.createContext("/api/marketplace/user", addCORSHeaders(ClientCom::handleMarketplaceUserListingsRequest));
+
+        // Explore & discovery endpoints
+        server.createContext("/api/discogs/explore", addCORSHeaders(ClientCom::handleDiscogsExploreRequest));
+        server.createContext("/api/discogs/artist", addCORSHeaders(ClientCom::handleDiscogsArtistRequest));
+        server.createContext("/api/discogs/genres", addCORSHeaders(ClientCom::handleDiscogsGenresRequest));
+        server.createContext("/api/discogs/countries", addCORSHeaders(ClientCom::handleDiscogsCountriesRequest));
+
+        // Cover art
+        server.createContext("/api/covers/", addCORSHeaders(ClientCom::handleCoverRequest));
+
+        // User profile endpoints
+        server.createContext("/api/user/profile", addCORSHeaders(ClientCom::handleUserProfileRequest));
+        server.createContext("/api/user/profile/update", addCORSHeaders(ClientCom::handleUserProfileUpdateRequest));
+        server.createContext("/api/user/profile/public", addCORSHeaders(ClientCom::handleUserPublicProfileRequest));
+
+        // Admin config endpoints
+        server.createContext("/api/admin/config", addCORSHeaders(ClientCom::handleAdminConfigRequest));
+        server.createContext("/api/admin/config/set", addCORSHeaders(ClientCom::handleAdminConfigSetRequest));
+
         server.setExecutor(null); // creates a default executor
         server.start();
         System.out.println("✓ Server is running on http://localhost:" + port);

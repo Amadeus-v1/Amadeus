@@ -1,6 +1,7 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 let allItems = [];
 let currentItemId = null;
+let discogsSearchTimeout = null;
 
 // Check if user is logged in
 function checkAuth() {
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('searchInput').addEventListener('input', filterItems);
+    document.getElementById('searchInput').addEventListener('input', handleSearchInput);
     document.getElementById('filterMediaType').addEventListener('change', filterItems);
     document.getElementById('sortBy').addEventListener('change', sortItems);
 
@@ -61,7 +62,218 @@ async function loadCollection() {
     }
 }
 
-// Display items
+// ===== Search with Discogs Integration =====
+
+function handleSearchInput() {
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    
+    // Always filter local items immediately
+    filterItems();
+
+    // Debounce Discogs search for terms >= 3 chars
+    clearTimeout(discogsSearchTimeout);
+    if (searchTerm.length >= 3) {
+        discogsSearchTimeout = setTimeout(() => searchDiscogs(searchTerm), 400);
+    } else {
+        // Remove any Discogs results section
+        const discogsSection = document.getElementById('discogsResultsSection');
+        if (discogsSection) discogsSection.remove();
+    }
+}
+
+async function searchDiscogs(query) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/discogs/search?q=${encodeURIComponent(query)}&limit=10`);
+        const data = await response.json();
+        const results = data.results || [];
+        
+        displayDiscogsResults(results, query);
+    } catch (e) {
+        // Discogs not available, silently skip
+        console.log('[collection] Discogs search unavailable');
+    }
+}
+
+function displayDiscogsResults(results, query) {
+    // Remove existing section if any
+    let section = document.getElementById('discogsResultsSection');
+    if (section) section.remove();
+
+    if (results.length === 0) return;
+
+    const container = document.getElementById('collectionContainer');
+    
+    const sectionHtml = `
+        <div id="discogsResultsSection" style="grid-column: 1 / -1; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                <span style="font-size: 1.2rem;">🎵</span>
+                <h3 style="margin: 0; color: var(--text);">More results for "${escapeHtml(query)}"</h3>
+                <span style="font-size: 0.7rem; padding: 3px 10px; border-radius: 500px; background: rgba(124,77,255,0.1); color: var(--accent); font-weight: 700;">${results.length} found</span>
+                <span style="margin-left: auto; font-size: 0.6rem; color: var(--muted);">Powered by Discogs</span>
+            </div>
+            <div class="collections-list">
+                ${results.map(r => renderDiscogsCard(r)).join('')}
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', sectionHtml);
+}
+
+function renderDiscogsCard(r) {
+    const formatIcon = getFormatIcon(r.formats || '');
+    const yearStr = r.year && r.year > 0 ? r.year : '—';
+    const safeJson = JSON.stringify(r).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+    
+    const coverSrc = `${API_BASE_URL}/covers/${r.discogsId}`;
+    return `
+        <div class="collection-item-card" onclick='openDiscogsModal(JSON.parse(this.dataset.release))' data-release='${JSON.stringify(r).replace(/'/g, "&#39;")}' style="cursor: pointer;">
+            <div class="item-media-icon">
+                <img src="${coverSrc}" alt="" style="width:100%;height:100%;object-fit:cover;"
+                     onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'font-size:4rem\\'>${formatIcon}</span>'">
+            </div>
+            <div class="item-content">
+                <h3>${escapeHtml(r.title)}</h3>
+                <p class="item-artist">
+                    <a href="artist.html?name=${encodeURIComponent(r.artist || '')}" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;">${escapeHtml(r.artist || 'Unknown Artist')}</a>
+                </p>
+                <div class="item-meta">
+                    ${r.formats ? `<span class="item-type">${escapeHtml(r.formats.split(',')[0])}</span>` : ''}
+                    <span class="item-condition">${yearStr}</span>
+                </div>
+                ${r.genres ? `<div style="margin-top: 4px;"><span style="font-size: 0.65rem; padding: 2px 8px; border-radius: 500px; background: rgba(124,77,255,0.1); color: var(--accent);">${escapeHtml(r.genres)}</span></div>` : ''}
+                <div class="item-footer">
+                    <span style="color: var(--muted); font-size: 0.75rem;">${r.country ? '🌍 ' + escapeHtml(r.country) : ''}</span>
+                    <span style="color: var(--accent); font-size: 0.75rem; font-weight: 700;">View Details ›</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== Discogs Detail Modal =====
+
+function openDiscogsModal(release) {
+    const modal = document.getElementById('itemModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    modalTitle.textContent = release.title;
+
+    const formatIcon = getFormatIcon(release.formats || '');
+    const yearStr = release.year && release.year > 0 ? release.year : 'Unknown';
+
+    let relatedHtml = '';
+    if (release.masterId && release.masterId > 0) {
+        relatedHtml = `
+            <div id="relatedReleases" style="margin-top: 16px;">
+                <h4 style="margin-bottom: 12px; color: var(--text);">📦 Other Versions of This Album</h4>
+                <div id="relatedList" style="color: var(--muted); font-size: 0.85rem;">Loading related releases...</div>
+            </div>
+        `;
+    }
+
+    const coverSrc = `${API_BASE_URL}/covers/${release.discogsId}`;
+    modalBody.innerHTML = `
+        <div class="modal-item-details" style="color: var(--text);">
+            <div style="text-align: center; padding: 24px; background: var(--bg); border-radius: 12px; margin-bottom: 16px;">
+                <img src="${coverSrc}" alt="" style="width:200px;height:200px;object-fit:cover;border-radius:12px;"
+                     onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\\'font-size:5rem\\'>${formatIcon}</span>')">
+                <div style="margin-top: 8px;">
+                    <span style="font-size: 0.6rem; color: var(--muted);">Powered by Discogs</span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div><strong>Title:</strong> ${escapeHtml(release.title)}</div>
+                <div><strong>Artist:</strong> <a href="artist.html?name=${encodeURIComponent(release.artist || '')}" style="color:var(--accent);text-decoration:none;">${escapeHtml(release.artist || 'Unknown')}</a></div>
+                <div><strong>Year:</strong> ${yearStr}</div>
+                ${release.formats ? `<div><strong>Format:</strong> ${escapeHtml(release.formats)}</div>` : ''}
+                ${release.genres ? `<div><strong>Genres:</strong> ${escapeHtml(release.genres)}</div>` : ''}
+                ${release.styles ? `<div><strong>Styles:</strong> ${escapeHtml(release.styles)}</div>` : ''}
+                ${release.labels ? `<div><strong>Label:</strong> ${escapeHtml(release.labels)}</div>` : ''}
+                ${release.country ? `<div><strong>Country:</strong> 🌍 ${escapeHtml(release.country)}</div>` : ''}
+                ${release.barcode ? `<div><strong>Barcode:</strong> <code style="color: var(--accent);">${escapeHtml(release.barcode)}</code></div>` : ''}
+
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 8px 0;">
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="release.html?id=${release.discogsId}" class="btn btn-primary" style="text-decoration: none; font-size: 0.85rem;">📄 Full Details</a>
+                    <a href="add-item.html" class="btn btn-primary" style="text-decoration: none; font-size: 0.85rem;" onclick="storeDiscogsForAdd(${release.discogsId})">➕ Add to Collection</a>
+                    <a href="https://www.discogs.com/release/${release.discogsId}" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 0.85rem;">🔗 Discogs</a>
+                </div>
+
+                ${relatedHtml}
+            </div>
+        </div>
+    `;
+
+    // Hide the default action buttons for Discogs items
+    const actionBtns = modal.querySelectorAll('.feature-section > div:last-child');
+
+    modal.classList.remove('hidden');
+
+    // Load related releases if master ID exists
+    if (release.masterId && release.masterId > 0) {
+        loadRelatedReleases(release.masterId, release.discogsId);
+    }
+}
+
+function storeDiscogsForAdd(discogsId) {
+    // Store the discogs ID so add-item page can pre-fill
+    sessionStorage.setItem('prefillDiscogsId', discogsId);
+}
+
+async function loadRelatedReleases(masterId, currentId) {
+    const listEl = document.getElementById('relatedList');
+    if (!listEl) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discogs/related?masterId=${masterId}`);
+        const data = await response.json();
+        const releases = (data.releases || []).filter(r => r.discogsId !== currentId);
+
+        if (releases.length === 0) {
+            listEl.innerHTML = '<p style="color: var(--muted);">No other versions found.</p>';
+            return;
+        }
+
+        listEl.innerHTML = releases.slice(0, 20).map(r => {
+            const yearStr = r.year && r.year > 0 ? r.year : '—';
+            return `
+                <div onclick='openDiscogsModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' 
+                     style="display: flex; align-items: center; gap: 12px; padding: 10px; margin-bottom: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s;"
+                     onmouseover="this.style.borderColor='var(--accent)'"
+                     onmouseout="this.style.borderColor='var(--border)'">
+                    <span style="font-size: 1.2rem;">${getFormatIcon(r.formats || '')}</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 700; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(r.title)}</div>
+                        <div style="font-size: 0.75rem; color: var(--muted);">${yearStr} · ${escapeHtml(r.formats || '')} · ${escapeHtml(r.country || '')}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (releases.length > 20) {
+            listEl.innerHTML += `<p style="color: var(--muted); font-size: 0.8rem; margin-top: 8px;">...and ${releases.length - 20} more versions</p>`;
+        }
+    } catch (e) {
+        listEl.innerHTML = '<p style="color: var(--muted);">Could not load related releases.</p>';
+    }
+}
+
+function getFormatIcon(format) {
+    if (!format) return '💿';
+    const f = format.toLowerCase();
+    if (f.includes('vinyl') || f.includes('lp') || f.includes('12"') || f.includes('7"') || f.includes('10"')) return '🎵';
+    if (f.includes('cd')) return '💿';
+    if (f.includes('cassette')) return '📼';
+    if (f.includes('dvd')) return '🎬';
+    if (f.includes('blu-ray') || f.includes('blu ray')) return '📀';
+    return '💿';
+}
+
+// ===== Display Collection Items =====
+
 function displayItems(items) {
     const container = document.getElementById('collectionContainer');
     
@@ -196,7 +408,8 @@ function getMediaIcon(mediaType) {
     return icons[mediaType] || '📦';
 }
 
-// Open item detail modal
+// ===== Collection Item Modal =====
+
 function openItemModal(itemId) {
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
@@ -226,11 +439,12 @@ function openItemModal(itemId) {
                 
                 <hr style="border: none; border-top: 1px solid var(--border); margin: 12px 0;">
                 
-                <div style="background: var(--bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-                    <h4 style="margin-bottom: 12px;">List on Marketplace</h4>
+                <div id="sellSection" style="background: var(--bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin-bottom: 4px;">List on Marketplace</h4>
+                    <p style="font-size: 0.75rem; color: var(--muted); margin-bottom: 12px;">1% platform fee applies to all sales</p>
                     <div style="display: flex; gap: 12px;">
                         <input type="number" id="listingPrice" placeholder="Listing Price ($)" step="0.01" min="0" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);">
-                        <button class="btn btn-primary" onclick="listItemOnMarketplace()" style="padding: 8px 16px; font-size: 0.8rem;">List Item</button>
+                        <button id="listingBtn" class="btn btn-primary" onclick="listItemOnMarketplace()" style="padding: 8px 16px; font-size: 0.8rem;">List Item</button>
                     </div>
                 </div>
             </div>
@@ -250,6 +464,19 @@ async function listItemOnMarketplace() {
         return;
     }
 
+    const fee = (price * 0.01).toFixed(2);
+    const payout = (price - parseFloat(fee)).toFixed(2);
+
+    if (!confirm(`List this item for $${price.toFixed(2)} on the marketplace?\n\nPlatform fee (1%): $${fee}\nYou'll receive: $${payout}`)) {
+        return;
+    }
+
+    const listBtn = document.querySelector('#listingBtn');
+    if (listBtn) {
+        listBtn.disabled = true;
+        listBtn.textContent = 'Listing...';
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/marketplace/create`, {
             method: 'POST',
@@ -264,15 +491,31 @@ async function listItemOnMarketplace() {
         });
 
         if (response.ok) {
-            alert('Item successfully listed on marketplace!');
-            closeItemModal();
+            const sellSection = document.getElementById('sellSection');
+            if (sellSection) {
+                sellSection.innerHTML = `
+                    <div style="text-align: center; padding: 16px; background: rgba(16,185,129,0.08); border-radius: 8px; border: 1px solid #10b981;">
+                        <p style="color: #10b981; font-weight: 700;">✓ Listed for $${price.toFixed(2)}</p>
+                        <p style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Fee: $${fee} · Payout: $${payout}</p>
+                        <p style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">View it in <a href="marketplace.html" style="color: var(--accent);">Marketplace</a></p>
+                    </div>
+                `;
+            }
         } else {
             const error = await response.json();
             alert('Failed to list item: ' + (error.message || 'Unknown error'));
+            if (listBtn) {
+                listBtn.disabled = false;
+                listBtn.textContent = 'List Item';
+            }
         }
     } catch (error) {
         console.error('Error listing item:', error);
         alert('Error connecting to marketplace service');
+        if (listBtn) {
+            listBtn.disabled = false;
+            listBtn.textContent = 'List Item';
+        }
     }
 }
 

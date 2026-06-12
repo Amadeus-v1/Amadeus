@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Release Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand"><h1>🎭 Amadeus</h1></div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch"><input type="checkbox" id="themeCheckbox"><span class="slider"></span></label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="explore.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Explore</a>
+            </div>
+
+            <div id="releaseContent">
+                <p style="text-align: center; padding: 60px; color: var(--muted);">Loading release...</p>
+            </div>
+
+            <!-- Related Versions -->
+            <div id="relatedSection" class="hidden" style="margin-top: 48px;">
+                <h2 style="margin-bottom: 20px;">📦 Other Versions of This Album</h2>
+                <div id="relatedGrid" class="collections-list"></div>
+            </div>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus — Music data powered by <a href="https://www.discogs.com" target="_blank" style="color: var(--accent); text-decoration: none;">Discogs</a></p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="release.js"></script>
+</body>
+</html>

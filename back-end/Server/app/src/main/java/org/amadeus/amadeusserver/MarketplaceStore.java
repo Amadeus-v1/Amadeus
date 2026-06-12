@@ -12,7 +12,7 @@ import org.json.JSONObject;
 
 public class MarketplaceStore {
     private static final String DB_URL = "jdbc:sqlite:marketplace.db";
-    private static final double PLATFORM_FEE_RATE = 0.03;
+    private static final double PLATFORM_FEE_RATE = 0.01;
     private static final String PLATFORM_BANK_ACCOUNT = "BANK-ACCOUNT-001";
 
     private static Connection getConnection() throws SQLException {
@@ -211,6 +211,89 @@ public class MarketplaceStore {
             return result;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to complete sale", e);
+        }
+    }
+
+    public static JSONObject cancelListing(String listingId, String sellerId) {
+        try {
+            initialize();
+            // Verify ownership
+            String checkSql = "SELECT sellerId, status FROM listings WHERE id = ?";
+            try (Connection connection = getConnection(); PreparedStatement stmt = connection.prepareStatement(checkSql)) {
+                stmt.setString(1, listingId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new RuntimeException("Listing not found");
+                    }
+                    if (!rs.getString("sellerId").equals(sellerId)) {
+                        throw new RuntimeException("You can only cancel your own listings");
+                    }
+                    if (!"active".equals(rs.getString("status"))) {
+                        throw new RuntimeException("Only active listings can be cancelled");
+                    }
+                }
+            }
+
+            String sql = "UPDATE listings SET status = 'cancelled' WHERE id = ? AND sellerId = ?";
+            try (Connection connection = getConnection(); PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, listingId);
+                stmt.setString(2, sellerId);
+                stmt.executeUpdate();
+            }
+
+            JSONObject result = new JSONObject();
+            result.put("listingId", listingId);
+            result.put("status", "cancelled");
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to cancel listing", e);
+        }
+    }
+
+    public static JSONArray getListingsWithDetails(String userId) {
+        try {
+            initialize();
+            String sql = """
+                    SELECT id, sellerId, itemId, price, currency, status, createdAt
+                    FROM listings
+                    WHERE sellerId = ?
+                    ORDER BY createdAt DESC;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    JSONArray items = new JSONArray();
+                    while (resultSet.next()) {
+                        String itemId = resultSet.getString("itemId");
+                        String sellerId = resultSet.getString("sellerId");
+
+                        JSONObject listing = new JSONObject();
+                        listing.put("id", resultSet.getString("id"));
+                        listing.put("sellerId", sellerId);
+                        listing.put("itemId", itemId);
+                        listing.put("price", resultSet.getDouble("price"));
+                        listing.put("currency", resultSet.getString("currency"));
+                        listing.put("status", resultSet.getString("status"));
+                        listing.put("createdAt", resultSet.getString("createdAt"));
+
+                        // Resolve Item Details
+                        JSONObject itemDetails = MediaStore.getItemById(itemId, sellerId);
+                        if (itemDetails != null) {
+                            listing.put("title", itemDetails.optString("title", "Unknown"));
+                            listing.put("artist", itemDetails.optString("artist", ""));
+                            listing.put("coverUrl", itemDetails.optString("coverUrl", ""));
+                            listing.put("mediaType", itemDetails.optString("mediaType", ""));
+                            listing.put("condition", itemDetails.optString("condition", ""));
+                        }
+
+                        items.put(listing);
+                    }
+                    return items;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to list user marketplace listings", e);
         }
     }
 }

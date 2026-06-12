@@ -24,11 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const navMap = {
         'logoutBtn': logout,
         'viewCollectionsBtn': 'collection.html',
+        'exploreBtn': 'explore.html',
         'barcodeBtn': 'barcode.html',
         'addItemBtn': 'add-item.html',
         'connectFriendsBtn': 'friends.html',
         'browseMarketplaceBtn': 'marketplace.html',
-        'testApiBtn': showApiTester
+        'myProfileBtn': 'profile.html',
+        'testApiBtn': showApiTester,
+        'adminPanelBtn': 'admin.html'
     };
 
     Object.entries(navMap).forEach(([id, destination]) => {
@@ -43,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // Show admin button for Xpexdex only
+    if (username && username.toLowerCase() === 'xpexdex') {
+        const adminBtn = document.getElementById('adminPanelBtn');
+        if (adminBtn) adminBtn.classList.remove('hidden');
+    }
 
     // API Tester forms
     const helloForm = document.getElementById('helloForm');

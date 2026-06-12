@@ -44,6 +44,30 @@
                     <a href="barcode.html" class="btn btn-primary" style="text-decoration: none;">📱 Go to Barcode Scanner</a>
                 </div>
 
+                <!-- Discogs Library Search -->
+                <div class="feature-section" id="discogsSection" style="border-color: var(--accent); position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin-bottom: 0;">🎵 Search Discogs Library</h2>
+                        <span id="discogsStatus" style="font-size: 0.75rem; padding: 4px 12px; border-radius: 500px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;"></span>
+                    </div>
+                    <p style="color: var(--muted); margin-bottom: 20px;">Search millions of real music releases — CDs, vinyl, cassettes, and more. Select a result to auto-fill the form below.</p>
+                    <input 
+                        type="text" 
+                        id="discogsSearchInput" 
+                        placeholder="🔍 Search by artist, album title, or barcode..."
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 1rem;"
+                    >
+                    <div id="discogsSearching" class="hidden" style="text-align: center; padding: 16px; color: var(--muted);">
+                        <span style="animation: pulse 1.5s infinite;">Searching Discogs...</span>
+                    </div>
+                    <div id="discogsResults" style="margin-top: 16px; max-height: 500px; overflow-y: auto;"></div>
+                    
+                    <!-- Notice when data not available -->
+                    <div id="discogsImportBanner" class="hidden" style="margin-top: 16px; padding: 16px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                        <p style="color: var(--muted); font-size: 0.85rem;">📦 Discogs data not imported yet. An admin can import it from the <a href="admin.html" style="color: var(--accent);">Admin Panel</a>.</p>
+                    </div>
+                </div>
+
                 <form id="addItemForm">
                     <div class="feature-section">
                         <h2>Basic Information</h2>

@@ -74,7 +74,7 @@ async function handleAddFriend(e) {
         const data = await response.json();
 
         if (response.ok) {
-            showFormMessage('✓ Friend request sent!', 'success');
+            showFormMessage('✓ Friend added!', 'success');
             document.getElementById('addFriendForm').reset();
             loadFriends(); // Refresh list
         } else {
@@ -86,7 +86,7 @@ async function handleAddFriend(e) {
     }
 }
 
-// Load friends list
+// Load friends list with profile data
 async function loadFriends() {
     const userId = localStorage.getItem('userId');
     const friendsList = document.getElementById('friendsList');
@@ -96,15 +96,41 @@ async function loadFriends() {
         const data = await response.json();
 
         if (data.friends && data.friends.length > 0) {
-            friendsList.innerHTML = data.friends.map(friend => `
-                <div class="action-card" style="min-height: auto; padding: 20px; flex-direction: row; justify-content: flex-start; text-align: left;">
-                    <div style="font-size: 2rem; margin-right: 16px;">👤</div>
-                    <div>
-                        <div class="action-title" style="font-size: 1.1rem;">${escapeHtml(friend.username || friend.friendId)}</div>
-                        <div class="action-desc">${friend.accepted ? 'Following' : 'Pending'}</div>
+            // Load profile info for each friend
+            const friendCards = await Promise.all(data.friends.map(async (friend) => {
+                const friendUsername = friend.username || friend.friendId;
+                let profile = null;
+                try {
+                    const profileRes = await fetch(`${API_BASE_URL}/user/profile/public?username=${encodeURIComponent(friendUsername)}`);
+                    if (profileRes.ok) profile = await profileRes.json();
+                } catch (e) { /* profile unavailable */ }
+
+                const displayName = profile?.displayName || friendUsername;
+                const bio = profile?.bio || '';
+                const avatarUrl = profile?.avatarUrl;
+                const genres = (profile?.favoriteGenres || '').split(',').filter(g => g.trim()).slice(0, 3);
+
+                const avatarHtml = avatarUrl
+                    ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML='<span style=\\'font-size:1.5rem\\'>👤</span>'">`
+                    : '<span style="font-size:1.5rem;">👤</span>';
+
+                return `
+                    <div class="action-card" style="min-height: auto; padding: 20px; cursor: pointer; flex-direction: row; justify-content: flex-start; text-align: left;"
+                         onclick="window.location.href='profile.html?user=${encodeURIComponent(friendUsername)}'">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #b388ff); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 16px; overflow: hidden;">
+                            ${avatarHtml}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 800; font-size: 1rem;">${escapeHtml(displayName)}</div>
+                            <div style="font-size: 0.8rem; color: var(--muted);">@${escapeHtml(friendUsername)}</div>
+                            ${bio ? `<div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(bio)}</div>` : ''}
+                            ${genres.length > 0 ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${genres.map(g => `<span style="font-size:0.6rem;padding:2px 8px;border-radius:500px;background:rgba(124,77,255,0.1);color:var(--accent);font-weight:600;">${escapeHtml(g.trim())}</span>`).join('')}</div>` : ''}
+                        </div>
+                        <div style="color: var(--accent); font-size: 0.8rem; font-weight: 700; flex-shrink: 0;">View ›</div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }));
+            friendsList.innerHTML = friendCards.join('');
         } else {
             friendsList.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">You haven\'t added any friends yet.</p>';
         }
@@ -131,9 +157,13 @@ async function loadFriendsCollections() {
                     </div>
                     <div class="item-content">
                         <h3>${escapeHtml(item.title)}</h3>
-                        <p class="item-artist">${escapeHtml(item.artist || '')}</p>
+                        <p class="item-artist">${escapeHtml(item.artistAuthor || '')}</p>
                         <div style="margin-top: 10px; font-size: 0.8rem; color: var(--muted);">
-                            Owner: <strong>${escapeHtml(item.friendUsername || item.friendId)}</strong>
+                            Owner: <a href="profile.html?user=${encodeURIComponent(item.friendUsername || item.friendId)}" 
+                                      style="color: var(--accent); text-decoration: none; font-weight: 700;"
+                                      onclick="event.stopPropagation()">
+                                ${escapeHtml(item.friendUsername || item.friendId)}
+                            </a>
                         </div>
                     </div>
                 </div>

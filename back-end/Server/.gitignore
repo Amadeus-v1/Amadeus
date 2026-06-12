@@ -26,6 +26,7 @@ cache/
 .vscode/
 .idea/
 *.iml
+*.db
 
 # OS generated files
 .DS_Store
