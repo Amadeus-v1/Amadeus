@@ -441,6 +441,48 @@ public class DiscogsStore {
     }
 
     /**
+     * Look up a single release by its barcode in the local Discogs database.
+     */
+    public static JSONObject lookupByBarcode(String barcode) {
+        if (!isAvailable() || barcode == null || barcode.isBlank()) return null;
+
+        String sql = """
+            SELECT id, title, artist, year, country, genres, styles, formats, labels, barcode, master_id
+            FROM discogs_releases
+            WHERE barcode = ? OR barcode LIKE ?
+            LIMIT 1;
+        """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, barcode);
+            stmt.setString(2, "%" + barcode + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    JSONObject result = releaseFromResultSet(rs);
+                    result.put("success", true);
+                    result.put("source", "discogs_local");
+                    
+                    // Basic media type mapping
+                    String formats = rs.getString("formats");
+                    if (formats != null) {
+                        String lower = formats.toLowerCase();
+                        if (lower.contains("vinyl") || lower.contains("lp")) result.put("mediaType", "Vinyl");
+                        else if (lower.contains("cd")) result.put("mediaType", "CD");
+                        else if (lower.contains("cassette")) result.put("mediaType", "Cassette");
+                    }
+                    
+                    return result;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DiscogsStore] Barcode lookup failed: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Get all releases that share the same master_id (i.e., all pressings/versions of an album).
      */
     public static JSONArray getRelatedReleases(int masterId, int limit) {
