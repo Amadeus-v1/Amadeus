@@ -15,11 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
 
     const username = localStorage.getItem('username');
-    document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
+    const greeting = document.getElementById('userGreeting');
+    if (greeting) greeting.textContent = `Welcome, ${username}!`;
 
     // Setup event listeners
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('addFriendForm').addEventListener('submit', handleAddFriend);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    
+    const addFriendForm = document.getElementById('addFriendForm');
+    if (addFriendForm) addFriendForm.addEventListener('submit', handleAddFriend);
 
     // Load initial data
     loadFriends();
@@ -28,9 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Logout handler
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('username');
+        localStorage.clear();
         window.location.href = 'login.html';
     }
 }
@@ -38,6 +40,8 @@ function logout() {
 // Show form message
 function showFormMessage(message, type = 'success') {
     const messageEl = document.getElementById('formMessage');
+    if (!messageEl) return;
+    
     messageEl.textContent = message;
     messageEl.className = `error-message ${type === 'success' ? 'success' : 'active'}`;
     if (type === 'success') {
@@ -89,9 +93,12 @@ async function handleAddFriend(e) {
 async function loadFriends() {
     const userId = localStorage.getItem('userId');
     const friendsList = document.getElementById('friendsList');
+    if (!friendsList) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/friends/list?userId=${encodeURIComponent(userId)}`);
+        if (!response.ok) throw new Error('Failed to fetch friends list');
+        
         const data = await response.json();
 
         if (data.friends && data.friends.length > 0) {
@@ -102,7 +109,9 @@ async function loadFriends() {
                 try {
                     const profileRes = await fetch(`${API_BASE_URL}/user/profile/public?username=${encodeURIComponent(friendUsername)}`);
                     if (profileRes.ok) profile = await profileRes.json();
-                } catch (e) { /* profile unavailable */ }
+                } catch (e) { 
+                    console.warn(`Profile for ${friendUsername} unavailable`, e);
+                }
 
                 const displayName = profile?.displayName || friendUsername;
                 const bio = profile?.bio || '';
@@ -113,9 +122,11 @@ async function loadFriends() {
                     ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML='<span style=\\'font-size:1.5rem\\'>👤</span>'">`
                     : '<span style="font-size:1.5rem;">👤</span>';
 
+                const friendId = friend.friendId || friend.id;
+
                 return `
                     <div class="action-card" style="min-height: auto; padding: 20px; cursor: pointer; flex-direction: row; justify-content: flex-start; text-align: left;"
-                         onclick="window.location.href='profile.html?user=${encodeURIComponent(friendUsername)}'">
+                         onclick="viewFriendCollection('${friendId}', '${friendUsername}')">
                         <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #b388ff); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 16px; overflow: hidden;">
                             ${avatarHtml}
                         </div>
@@ -135,45 +146,7 @@ async function loadFriends() {
         }
     } catch (error) {
         console.error('Error loading friends:', error);
-        friendsList.innerHTML = '<p class="error-message">Error loading friends.</p>';
-    }
-}
-
-<<<<<<< HEAD
-// Load friends' collections
-async function loadFriendsCollections() {
-    const userId = localStorage.getItem('userId');
-    const container = document.getElementById('friendsCollectionContainer');
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/friends/collections?userId=${encodeURIComponent(userId)}`);
-        const data = await response.json();
-
-        if (data.items && data.items.length > 0) {
-            container.innerHTML = data.items.map(item => `
-                <div class="collection-item-card">
-                    <div class="item-media-icon">
-                        ${item.coverUrl ? `<img src="${item.coverUrl}" alt="${item.title}">` : getMediaIcon(item.mediaType)}
-                    </div>
-                    <div class="item-content">
-                        <h3>${escapeHtml(item.title)}</h3>
-                        <p class="item-artist">${escapeHtml(item.artistAuthor || '')}</p>
-                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--muted);">
-                            Owner: <a href="profile.html?user=${encodeURIComponent(item.friendUsername || item.friendId)}" 
-                                      style="color: var(--accent); text-decoration: none; font-weight: 700;"
-                                      onclick="event.stopPropagation()">
-                                ${escapeHtml(item.friendUsername || item.friendId)}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">No updates from friends yet.</p>';
-        }
-    } catch (error) {
-        console.error('Error loading friends collections:', error);
-        container.innerHTML = '<p class="error-message">Error loading friend updates.</p>';
+        friendsList.innerHTML = '<p class="error-message" style="color: #ff4444; text-align: center; padding: 20px;">Error loading friends. Please check your connection.</p>';
     }
 }
 

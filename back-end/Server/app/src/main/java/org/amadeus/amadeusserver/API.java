@@ -2,6 +2,7 @@ package org.amadeus.amadeusserver;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -101,7 +102,8 @@ public class API {
         server.createContext("/api/admin/config", addCORSHeaders(ClientCom::handleAdminConfigRequest));
         server.createContext("/api/admin/config/set", addCORSHeaders(ClientCom::handleAdminConfigSetRequest));
 
-        server.setExecutor(null); // creates a default executor
+        // Use a fixed thread pool to handle concurrent requests
+        server.setExecutor(Executors.newFixedThreadPool(10));
         server.start();
         System.out.println("✓ Server is running on http://localhost:" + port);
     }

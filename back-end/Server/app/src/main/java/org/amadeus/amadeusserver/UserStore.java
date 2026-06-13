@@ -11,12 +11,15 @@ import org.json.JSONObject;
 
 public class UserStore {
     private static final String DB_URL = "jdbc:sqlite:userAccounts.db";
+    private static boolean initialized = false;
 
     private static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL);
     }
 
-    private static void initialize() throws SQLException {
+    private static synchronized void initialize() throws SQLException {
+        if (initialized) return;
+        
         String sql = """
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
@@ -36,17 +39,18 @@ public class UserStore {
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.execute(sql);
             // Add new columns if they don't exist (for existing databases)
-            safeAddColumn(statement, "displayName", "TEXT");
-            safeAddColumn(statement, "bio", "TEXT");
-            safeAddColumn(statement, "avatarUrl", "TEXT");
-            safeAddColumn(statement, "favoriteGenres", "TEXT");
-            safeAddColumn(statement, "profileTheme", "TEXT DEFAULT 'default'");
+            safeAddColumn(statement, "displayName", "TEXT", "''");
+            safeAddColumn(statement, "bio", "TEXT", "''");
+            safeAddColumn(statement, "avatarUrl", "TEXT", "''");
+            safeAddColumn(statement, "favoriteGenres", "TEXT", "''");
+            safeAddColumn(statement, "profileTheme", "TEXT", "'default'");
         }
+        initialized = true;
     }
 
-    private static void safeAddColumn(Statement stmt, String column, String type) {
+    private static void safeAddColumn(Statement stmt, String column, String type, String defaultValue) {
         try {
-            stmt.execute("ALTER TABLE users ADD COLUMN " + column + " " + type);
+            stmt.execute("ALTER TABLE users ADD COLUMN " + column + " " + type + " DEFAULT " + defaultValue);
         } catch (SQLException e) {
             // Column already exists — ignore
         }
