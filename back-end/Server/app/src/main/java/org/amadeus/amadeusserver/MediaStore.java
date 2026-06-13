@@ -70,9 +70,21 @@ public class MediaStore {
                 );
                 """;
 
+        String wishlistSql = """
+                CREATE TABLE IF NOT EXISTS wishlist_items (
+                    userId TEXT NOT NULL,
+                    itemId TEXT NOT NULL,
+                    notes TEXT,
+                    visibility TEXT DEFAULT 'public',
+                    addedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (userId, itemId)
+                );
+                """;
+
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.execute(mediaSql);
             statement.execute(collectionSql);
+            statement.execute(wishlistSql);
             statement.execute("CREATE INDEX IF NOT EXISTS idx_media_items_barcode ON media_items(barcode);");
             
             // Migration: Add columns if they don't exist
@@ -282,6 +294,31 @@ public class MediaStore {
         }
     }
 
+    public static JSONObject addToWishlist(String userId, String itemId, JSONObject details) {
+        try {
+            initialize();
+            String sql = """
+                    INSERT INTO wishlist_items (userId, itemId, notes, visibility)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(userId, itemId) DO UPDATE SET
+                        notes = excluded.notes,
+                        visibility = excluded.visibility;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                statement.setString(2, itemId);
+                statement.setString(3, details.optString("notes", details.optString("description", "")));
+                statement.setString(4, details.optString("visibility", "public"));
+                statement.executeUpdate();
+            }
+
+            return details;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to add item to wishlist", e);
+        }
+    }
+
     public static JSONObject updateItem(String itemId, JSONObject updates) {
         try {
             initialize();
@@ -354,6 +391,30 @@ public class MediaStore {
                             statement.executeUpdate();
                         }
                     }
+
+                    // 3. Update wishlist_items table
+                    StringBuilder wishlistSql = new StringBuilder("UPDATE wishlist_items SET ");
+                    List<Object> wishlistParams = new ArrayList<>();
+                    if (updates.has("notes") || updates.has("description")) {
+                        wishlistSql.append("notes = ?, ");
+                        wishlistParams.add(updates.optString("notes", updates.optString("description")));
+                    }
+                    if (updates.has("visibility")) {
+                        wishlistSql.append("visibility = ?, ");
+                        wishlistParams.add(updates.getString("visibility"));
+                    }
+
+                    if (!wishlistParams.isEmpty()) {
+                        String sql = wishlistSql.substring(0, wishlistSql.length() - 2) + " WHERE userId = ? AND itemId = ?;";
+                        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                            for (int i = 0; i < wishlistParams.size(); i++) {
+                                statement.setObject(i + 1, wishlistParams.get(i));
+                            }
+                            statement.setString(wishlistParams.size() + 1, userId);
+                            statement.setString(wishlistParams.size() + 2, itemId);
+                            statement.executeUpdate();
+                        }
+                    }
                 }
             }
 
@@ -368,15 +429,18 @@ public class MediaStore {
             initialize();
             String sql = """
                     SELECT m.id, m.title, m.artist, m.mediaType, m.format, m.year, m.barcode, m.coverUrl, m.notes as media_notes,
-                           c.conditionLabel, c.quantity, c.estimatedValue, c.visibility, c.notes as collection_notes
+                           c.conditionLabel, c.quantity, c.estimatedValue, c.visibility as coll_visibility, c.notes as collection_notes,
+                           w.visibility as wish_visibility, w.notes as wishlist_notes
                     FROM media_items m
                     LEFT JOIN collection_items c ON m.id = c.itemId AND c.userId = ?
+                    LEFT JOIN wishlist_items w ON m.id = w.itemId AND w.userId = ?
                     WHERE m.id = ?;
                     """;
 
             try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, userId);
-                statement.setString(2, itemId);
+                statement.setString(2, userId);
+                statement.setString(3, itemId);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         JSONObject item = new JSONObject();
@@ -389,12 +453,24 @@ public class MediaStore {
                         item.put("year", resultSet.getInt("year"));
                         item.put("barcode", resultSet.getString("barcode"));
                         item.put("coverUrl", resultSet.getString("coverUrl"));
+                        
+                        // Collection fields
                         item.put("condition", resultSet.getString("conditionLabel"));
                         item.put("quantity", resultSet.getInt("quantity"));
                         item.put("estimatedValue", resultSet.getDouble("estimatedValue"));
-                        item.put("visibility", resultSet.getString("visibility"));
+                        item.put("visibility", resultSet.getString("coll_visibility"));
                         item.put("notes", resultSet.getString("collection_notes"));
                         item.put("description", resultSet.getString("collection_notes"));
+
+                        // Wishlist fields
+                        if (resultSet.getString("wish_visibility") != null) {
+                            item.put("inWishlist", true);
+                            item.put("wishlistVisibility", resultSet.getString("wish_visibility"));
+                            item.put("wishlistNotes", resultSet.getString("wishlist_notes"));
+                        } else {
+                            item.put("inWishlist", false);
+                        }
+
                         return item;
                     }
                 }
@@ -420,6 +496,24 @@ public class MediaStore {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to delete item from collection", e);
+        }
+    }
+
+    public static void deleteFromWishlist(String userId, String itemId) {
+        try {
+            initialize();
+            String sql = """
+                    DELETE FROM wishlist_items
+                    WHERE userId = ? AND itemId = ?;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                statement.setString(2, itemId);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete item from wishlist", e);
         }
     }
 
@@ -606,6 +700,88 @@ public class MediaStore {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to list public collection", e);
+        }
+    }
+
+    public static JSONArray listWishlist(String userId) {
+        try {
+            initialize();
+            String sql = """
+                    SELECT m.id, m.title, m.artist, m.mediaType, m.format, m.year, m.barcode, m.coverUrl,
+                           w.notes, w.addedAt, w.visibility
+                    FROM wishlist_items w
+                    JOIN media_items m ON m.id = w.itemId
+                    WHERE w.userId = ?
+                    ORDER BY w.addedAt DESC;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    JSONArray items = new JSONArray();
+                    while (resultSet.next()) {
+                        JSONObject item = new JSONObject();
+                        item.put("id", resultSet.getString("id"));
+                        item.put("title", resultSet.getString("title"));
+                        item.put("artist", resultSet.getString("artist"));
+                        item.put("artistAuthor", resultSet.getString("artist"));
+                        item.put("mediaType", resultSet.getString("mediaType"));
+                        item.put("format", resultSet.getString("format"));
+                        item.put("year", resultSet.getInt("year"));
+                        item.put("barcode", resultSet.getString("barcode"));
+                        item.put("coverUrl", resultSet.getString("coverUrl"));
+                        item.put("notes", resultSet.getString("notes"));
+                        item.put("description", resultSet.getString("notes"));
+                        item.put("addedAt", resultSet.getString("addedAt"));
+                        item.put("visibility", resultSet.getString("visibility"));
+                        items.put(item);
+                    }
+                    return items;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to list wishlist", e);
+        }
+    }
+
+    public static JSONArray listPublicWishlist(String userId) {
+        try {
+            initialize();
+            String sql = """
+                    SELECT m.id, m.title, m.artist, m.mediaType, m.format, m.year, m.barcode, m.coverUrl,
+                           w.notes, w.addedAt, w.visibility
+                    FROM wishlist_items w
+                    JOIN media_items m ON m.id = w.itemId
+                    WHERE w.userId = ? AND w.visibility = 'public'
+                    ORDER BY w.addedAt DESC;
+                    """;
+
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    JSONArray items = new JSONArray();
+                    while (resultSet.next()) {
+                        JSONObject item = new JSONObject();
+                        item.put("id", resultSet.getString("id"));
+                        item.put("title", resultSet.getString("title"));
+                        item.put("artist", resultSet.getString("artist"));
+                        item.put("artistAuthor", resultSet.getString("artist"));
+                        item.put("mediaType", resultSet.getString("mediaType"));
+                        item.put("format", resultSet.getString("format"));
+                        item.put("year", resultSet.getInt("year"));
+                        item.put("barcode", resultSet.getString("barcode"));
+                        item.put("coverUrl", resultSet.getString("coverUrl"));
+                        item.put("notes", resultSet.getString("notes"));
+                        item.put("description", resultSet.getString("notes"));
+                        item.put("addedAt", resultSet.getString("addedAt"));
+                        item.put("visibility", resultSet.getString("visibility"));
+                        items.put(item);
+                    }
+                    return items;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to list public wishlist", e);
         }
     }
 }

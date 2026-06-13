@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amadeus - Friend's Library</title>
+    <title>Amadeus - My Wishlist</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,36 +31,40 @@
         <!-- Main Dashboard Container -->
         <div class="dashboard-container">
             <div class="breadcrumb" style="margin-bottom: 24px;">
-                <a href="friends.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Friends</a>
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
             </div>
 
             <header class="dashboard-header">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
                     <div>
-                        <h1 id="friendNameHeader">📚 Library</h1>
-                        <p>Viewing shared items from this friend's library</p>
+                        <h1>✨ My Wishlist</h1>
+                        <p>Track items you want to add to your collection</p>
                     </div>
-                    
-                    <div class="tab-container" style="display: flex; gap: 8px;">
-                        <button id="tabCollection" class="btn btn-primary" onclick="switchTab('collection')">Collection</button>
-                        <button id="tabWishlist" class="btn btn-secondary" onclick="switchTab('wishlist')">Wishlist</button>
-                    </div>
+                    <a href="explore.html" class="btn btn-primary" style="text-decoration: none;">🔍 Find Items</a>
                 </div>
             </header>
 
             <main class="dashboard-main">
+                <!-- Wishlist Stats -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 48px;">
+                    <div class="feature-section" style="margin-bottom: 0; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);" id="totalWishlistItems">0</div>
+                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Items on Wishlist</div>
+                    </div>
+                </div>
+
                 <!-- Filters and Search -->
                 <div style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 48px;">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="🔍 Search items in this library..."
+                        placeholder="🔍 Search wishlist items..."
                     >
                 </div>
 
                 <!-- Items Container -->
-                <div id="itemsContainer" class="collections-list">
-                    <p style="text-align: center; color: var(--muted); padding: 40px;">Loading...</p>
+                <div id="wishlistContainer" class="collections-list">
+                    <p style="text-align: center; color: var(--muted); padding: 40px;">Loading your wishlist...</p>
                 </div>
             </main>
         </div>
@@ -73,6 +77,8 @@
                 <div id="modalBody" style="margin: 24px 0;"></div>
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button class="btn btn-secondary" onclick="closeItemModal()">Close</button>
+                    <button class="btn btn-primary" onclick="moveToCollection()">I Got This!</button>
+                    <button class="btn btn-secondary" style="color: #ff4444; border-color: #ff4444;" onclick="deleteWishlistItem()">Remove</button>
                 </div>
             </div>
         </div>
@@ -83,6 +89,6 @@
     </div>
 
     <script src="theme.js"></script>
-    <script src="friend-collection.js"></script>
+    <script src="wishlist.js"></script>
 </body>
 </html>

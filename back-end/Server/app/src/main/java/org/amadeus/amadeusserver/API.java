@@ -51,6 +51,13 @@ public class API {
         server.createContext("/api/collection/list", addCORSHeaders(ClientCom::handleCollectionListRequest));
         server.createContext("/api/collection/update", addCORSHeaders(ClientCom::handleCollectionUpdateRequest));
         server.createContext("/api/collection/delete", addCORSHeaders(ClientCom::handleCollectionDeleteRequest));
+        
+        // Wishlist endpoints
+        server.createContext("/api/wishlist/add", addCORSHeaders(ClientCom::handleWishlistAddRequest));
+        server.createContext("/api/wishlist/list", addCORSHeaders(ClientCom::handleWishlistListRequest));
+        server.createContext("/api/wishlist/delete", addCORSHeaders(ClientCom::handleWishlistDeleteRequest));
+        server.createContext("/api/friends/wishlist", addCORSHeaders(ClientCom::handleFriendWishlistRequest));
+
         server.createContext("/api/friends/add", addCORSHeaders(ClientCom::handleFriendsAddRequest));
         server.createContext("/api/friends/list", addCORSHeaders(ClientCom::handleFriendsListRequest));
         server.createContext("/api/friends/collection", addCORSHeaders(ClientCom::handleFriendCollectionRequest));

@@ -3,12 +3,8 @@ const API_BASE_URL = 'http://localhost:8080/api';
 let currentScanResult = null;
 let cameraActive = false;
 let scannerInterval = null;
-
-// Evaluation state
-let pendingBarcode = null;
-let detectionStartTime = 0;
-const EVALUATION_TIME = 5000; // 5 seconds
-let evaluationActive = false;
+let isProcessing = false; // Prevent multiple simultaneous searches
+let lastScannedCode = null; // Prevent repeated scans of the same item
 
 // Check if user is logged in
 function checkAuth() {
@@ -30,10 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('scanButton').addEventListener('click', handleBarcodeSearch);
+    document.getElementById('scanButton').addEventListener('click', () => {
+        const barcode = document.getElementById('barcodeInput').value;
+        handleBarcodeSearch(barcode);
+    });
+    
     document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            handleBarcodeSearch();
+            handleBarcodeSearch(e.target.value);
         }
     });
 
@@ -82,10 +82,15 @@ function showSuccess(message) {
     }, 3000);
 }
 
-// Handle barcode search
-async function handleBarcodeSearch() {
-    let barcode = document.getElementById('barcodeInput').value.trim();
-
+/**
+ * Handle barcode search
+ * @param {string} barcodeValue 
+ * @param {boolean} autoAdd - Whether to automatically add the item if found
+ */
+async function handleBarcodeSearch(barcodeValue, autoAdd = false) {
+    if (isProcessing) return;
+    
+    let barcode = (barcodeValue || '').toString().trim();
     // Clean up barcode
     barcode = barcode.replace(/[- _.]/g, '');
 
@@ -94,10 +99,13 @@ async function handleBarcodeSearch() {
         return;
     }
 
+    isProcessing = true;
     const scanButton = document.getElementById('scanButton');
-    scanButton.disabled = true;
     const originalText = scanButton.innerHTML;
+    
+    scanButton.disabled = true;
     scanButton.innerHTML = 'Searching...';
+    document.getElementById('barcodeInput').value = barcode;
 
     try {
         const response = await fetch(`${API_BASE_URL}/catalog/barcode`, {
@@ -111,16 +119,29 @@ async function handleBarcodeSearch() {
         if (response.ok && data.success) {
             displayResults([data]);
             currentScanResult = data;
-            showSuccess('✓ Item found!');
-            if (cameraActive) stopCamera();
+            
+            if (autoAdd) {
+                showSuccess('✓ Item found! Adding to collection...');
+                await addItemFromBarcode(data, false); // false = don't redirect yet
+                if (cameraActive) stopCamera();
+            } else {
+                showSuccess('✓ Item found!');
+                if (cameraActive) stopCamera();
+            }
         } else {
             displayNoResults();
             currentScanResult = null;
+            // If camera was active, we might want to keep it running but clear the status
+            updateScannerStatus("No item found for this barcode.", true);
+            setTimeout(() => {
+                if (cameraActive) updateScannerStatus("Ready to scan", false);
+            }, 3000);
         }
     } catch (error) {
         showError(`Error: ${error.message}`);
         console.error('Error scanning barcode:', error);
     } finally {
+        isProcessing = false;
         scanButton.disabled = false;
         scanButton.innerHTML = originalText;
     }
@@ -175,7 +196,7 @@ function displayNoResults() {
     document.getElementById('noResults').classList.remove('hidden');
 }
 
-async function addItemFromBarcode(itemData) {
+async function addItemFromBarcode(itemData, redirect = true) {
     const userId = localStorage.getItem('userId');
     const collectionData = {
         title: itemData.title || '',
@@ -203,8 +224,12 @@ async function addItemFromBarcode(itemData) {
         });
 
         if (response.ok) {
-            showSuccess('✓ Item added to collection!');
-            setTimeout(() => { window.location.href = 'collection.html'; }, 1500);
+            if (redirect) {
+                showSuccess('✓ Item added to collection!');
+                setTimeout(() => { window.location.href = 'collection.html'; }, 1500);
+            } else {
+                showSuccess('✓ Item added!');
+            }
         } else {
             const data = await response.json();
             showError(data.message || 'Failed to add item');
@@ -219,6 +244,7 @@ function clearResults() {
     document.getElementById('resultsSection').classList.add('hidden');
     document.getElementById('noResults').classList.add('hidden');
     document.getElementById('barcodeInput').focus();
+    lastScannedCode = null;
 }
 
 // --- Camera Scanner Implementation ---
@@ -235,22 +261,19 @@ async function startCamera() {
     const cameraSection = document.getElementById('cameraSection');
     const toggleBtn = document.getElementById('toggleCameraButton');
     
-    // Reset evaluation state
-    pendingBarcode = null;
-    detectionStartTime = 0;
-    evaluationActive = false;
+    isProcessing = false;
+    lastScannedCode = null;
 
-    // 1. Try Native BarcodeDetector API first (Fastest, if available)
+    // 1. Try Native BarcodeDetector API first
     if ('BarcodeDetector' in window) {
         try {
             const formats = await BarcodeDetector.getSupportedFormats();
-            if (formats.length > 0) {
-                console.log('Native BarcodeDetector supported');
+            if (formats.includes('ean_13')) {
                 startNativeScanner();
                 return;
             }
         } catch (e) {
-            console.warn('Native BarcodeDetector failed, falling back to Quagga', e);
+            console.warn('Native BarcodeDetector failed', e);
         }
     }
 
@@ -259,38 +282,31 @@ async function startCamera() {
 }
 
 /**
- * Handles the logic for confirming a barcode by making sure it's visible for 5 seconds.
+ * Handles the logic for a single clear detection.
  */
 function handleDetection(code) {
-    if (!cameraActive) return;
+    if (!cameraActive || isProcessing) return;
 
-    if (code === pendingBarcode) {
-        const now = Date.now();
-        const elapsed = now - detectionStartTime;
-        
-        updateScannerStatus(`Evaluating ISBN... ${(elapsed / 1000).toFixed(1)}s`, true);
+    const cleanCode = code.toString().trim().replace(/[- _.]/g, '');
+    if (!cleanCode || cleanCode.length < 8) return;
 
-        if (elapsed >= EVALUATION_TIME) {
-            document.getElementById('barcodeInput').value = code;
-            showSuccess("Barcode verified!");
-            updateScannerStatus("Verified!", false);
-            stopCamera();
-            handleBarcodeSearch();
-        }
-    } else {
-        // New code detected or code changed
-        pendingBarcode = code;
-        detectionStartTime = Date.now();
-        updateScannerStatus(`Focusing on ${code}...`, true);
-    }
+    // If we just scanned this code, don't trigger again immediately
+    if (cleanCode === lastScannedCode) return;
+
+    lastScannedCode = cleanCode;
+    updateScannerStatus(`Detected: ${cleanCode}`, true);
+    
+    // Immediate search and add
+    handleBarcodeSearch(cleanCode, true);
 }
 
 function updateScannerStatus(message, visible) {
     const statusOverlay = document.getElementById('scannerStatus');
     const statusText = document.getElementById('statusMessage');
     
+    if (statusText) statusText.textContent = message;
+    
     if (visible) {
-        statusText.textContent = message;
         statusOverlay.classList.remove('hidden');
     } else {
         statusOverlay.classList.add('hidden');
@@ -308,14 +324,15 @@ function startQuaggaScanner() {
             target: document.querySelector('#interactive'),
             constraints: {
                 facingMode: "environment",
-                width: { ideal: 640 },
-                height: { ideal: 480 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             },
         },
         decoder: {
-            readers: ["ean_reader", "upc_reader", "code_128_reader", "code_39_reader"]
+            readers: ["ean_reader", "upc_reader", "code_128_reader"]
         },
-        locate: true
+        locate: true,
+        halfSample: false
     }, function(err) {
         if (err) {
             showError("Unable to start camera: " + err.message);
@@ -325,20 +342,13 @@ function startQuaggaScanner() {
         cameraActive = true;
         cameraSection.classList.remove('hidden');
         toggleBtn.textContent = "📷 Close Camera Scanner";
+        updateScannerStatus("Align barcode in frame", true);
     });
 
     Quagga.onDetected((result) => {
         const code = result.codeResult.code;
         if (code) {
             handleDetection(code);
-        }
-    });
-    
-    // Reset if nothing is detected
-    Quagga.onProcessed((result) => {
-        if (!result || !result.codeResult) {
-            // Optional: reset evaluation if code is lost? 
-            // Better to just wait a bit before resetting to handle flickers
         }
     });
 }
@@ -350,41 +360,41 @@ async function startNativeScanner() {
     
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+            video: { 
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
         });
         
         const video = document.createElement('video');
         video.srcObject = stream;
         video.setAttribute('playsinline', true);
-        video.className = 'scanner-video';
         video.style.width = '100%';
         video.style.height = '100%';
         video.style.objectFit = 'cover';
         viewport.appendChild(video);
         await video.play();
 
-        const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'upc_e', 'code_128'] });
+        const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'code_128'] });
         
         cameraActive = true;
         cameraSection.classList.remove('hidden');
         toggleBtn.textContent = "📷 Close Camera Scanner";
+        updateScannerStatus("Align barcode in frame", true);
 
         scannerInterval = setInterval(async () => {
-            if (!cameraActive) return;
+            if (!cameraActive || isProcessing) return;
             try {
                 const barcodes = await barcodeDetector.detect(video);
                 if (barcodes.length > 0) {
                     handleDetection(barcodes[0].rawValue);
-                } else {
-                    // If nothing detected for a moment, maybe slow down or reset?
-                    // For now, let's keep the pending code for a short grace period
                 }
             } catch (e) {
                 console.error('Detection error', e);
             }
-        }, 200); // Check more frequently for better evaluation tracking
+        }, 150); 
 
-        // Store stream on viewport to stop it later
         viewport.stream = stream;
 
     } catch (err) {
@@ -397,10 +407,7 @@ function stopCamera() {
     
     updateScannerStatus("", false);
     
-    // Stop Quagga
     try { Quagga.stop(); } catch(e) {}
-    
-    // Stop Native Scanner
     if (scannerInterval) {
         clearInterval(scannerInterval);
         scannerInterval = null;
@@ -412,7 +419,6 @@ function stopCamera() {
         viewport.stream = null;
     }
     
-    // Clean viewport while preserving the scanner UI used on the next open.
     viewport.innerHTML = `
         <div id="scannerStatus" class="scanner-status-overlay hidden">
             <div class="status-content">

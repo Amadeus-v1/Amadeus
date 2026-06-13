@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     else document.getElementById('releaseContent').innerHTML = '<p style="text-align:center;padding:60px;color:#ef4444;">No release ID specified</p>';
 });
 
+let currentReleaseData = null;
+
 async function loadRelease(discogsId) {
     try {
         const res = await fetch(`${API_BASE_URL}/discogs/release?id=${discogsId}`);
@@ -27,6 +29,7 @@ async function loadRelease(discogsId) {
             return;
         }
         const r = data.release || data;
+        currentReleaseData = r;
         renderRelease(r);
         document.title = `${r.title} — Amadeus`;
 
@@ -99,12 +102,46 @@ function renderRelease(r) {
                 <!-- Actions -->
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <a href="add-item.html" class="btn btn-primary" style="text-decoration: none;" onclick="sessionStorage.setItem('prefillDiscogsId','${r.discogsId}')">➕ Add to My Collection</a>
+                    <button class="btn btn-secondary" style="text-decoration: none;" onclick="addToWishlist()">✨ Add to Wishlist</button>
                     <a href="https://www.discogs.com/release/${r.discogsId}" target="_blank" class="btn btn-secondary" style="text-decoration: none;">🔗 View on Discogs</a>
                     <a href="artist.html?name=${encodeURIComponent(r.artist || '')}" class="btn btn-secondary" style="text-decoration: none;">👤 View Artist</a>
                 </div>
             </div>
         </div>
     `;
+}
+
+async function addToWishlist() {
+    if (!currentReleaseData) return;
+    const userId = localStorage.getItem('userId');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/wishlist/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                title: currentReleaseData.title,
+                artist: currentReleaseData.artist,
+                mediaType: 'Vinyl', // Defaulting for now
+                format: currentReleaseData.formats,
+                year: currentReleaseData.year,
+                coverUrl: `${API_BASE_URL}/covers/${currentReleaseData.discogsId}`,
+                wishlist: {
+                    visibility: 'public'
+                }
+            })
+        });
+
+        if (response.ok) {
+            alert('Added to wishlist!');
+        } else {
+            alert('Failed to add to wishlist');
+        }
+    } catch (error) {
+        console.error('Error adding to wishlist:', error);
+        alert('Error adding to wishlist');
+    }
 }
 
 async function loadRelated(masterId, currentId) {

@@ -352,6 +352,116 @@ public class ClientCom {
         }
     }
 
+    public static void handleWishlistAddRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        try {
+            String userId = requestJson.optString("userId", "");
+            String title = requestJson.optString("title", "");
+            if (userId.isBlank() || title.isBlank()) {
+                sendError(exchange, 400, "Missing userId or title");
+                return;
+            }
+
+            JSONObject item = MediaStore.addItem(requestJson);
+            MediaStore.addToWishlist(userId, item.getString("id"), requestJson.optJSONObject("wishlist") != null
+                    ? requestJson.getJSONObject("wishlist")
+                    : new JSONObject());
+
+            JSONObject response = new JSONObject();
+            response.put("message", "Item added to wishlist");
+            response.put("item", item);
+            sendJsonResponse(exchange, 201, response);
+        } catch (Exception e) {
+            sendError(exchange, 500, "Error adding to wishlist: " + e.getMessage());
+        }
+    }
+
+    public static void handleWishlistListRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        if (userId == null || userId.isBlank()) {
+            sendError(exchange, 400, "Missing userId parameter");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("userId", userId);
+        response.put("items", MediaStore.listWishlist(userId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
+    public static void handleWishlistDeleteRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject requestJson;
+        try {
+            requestJson = readJsonBody(exchange);
+        } catch (Exception e) {
+            sendError(exchange, 400, "Invalid JSON");
+            return;
+        }
+
+        try {
+            String itemId = requestJson.optString("itemId", "");
+            String userId = requestJson.optString("userId", "");
+            if (itemId.isBlank() || userId.isBlank()) {
+                sendError(exchange, 400, "Missing itemId or userId");
+                return;
+            }
+
+            MediaStore.deleteFromWishlist(userId, itemId);
+            JSONObject response = new JSONObject();
+            response.put("message", "Item deleted from wishlist");
+            sendJsonResponse(exchange, 200, response);
+        } catch (Exception e) {
+            sendError(exchange, 500, "Error deleting from wishlist: " + e.getMessage());
+        }
+    }
+
+    public static void handleFriendWishlistRequest(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String userId = processQuery(exchange.getRequestURI().getQuery(), "userId");
+        String friendId = processQuery(exchange.getRequestURI().getQuery(), "friendId");
+
+        if (userId == null || friendId == null) {
+            sendError(exchange, 400, "Missing userId or friendId parameter");
+            return;
+        }
+
+        if (!FriendsStore.isFriend(userId, friendId)) {
+            sendError(exchange, 403, "You are not friends with this user");
+            return;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("friendId", friendId);
+        response.put("items", MediaStore.listPublicWishlist(friendId));
+        sendJsonResponse(exchange, 200, response);
+    }
+
     public static void handleFriendsAddRequest(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");

@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navMap = {
         'logoutBtn': logout,
         'viewCollectionsBtn': 'collection.html',
+        'viewWishlistBtn': 'wishlist.html',
         'exploreBtn': 'explore.html',
         'barcodeBtn': 'barcode.html',
         'addItemBtn': 'add-item.html',

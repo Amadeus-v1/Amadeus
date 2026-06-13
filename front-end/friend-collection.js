@@ -1,5 +1,6 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 let friendItems = [];
+let currentTab = 'collection';
 
 // Check if user is logged in
 function checkAuth() {
@@ -29,15 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (friendUsername) {
-        document.getElementById('friendNameHeader').textContent = `📚 ${friendUsername}'s Collection`;
+        document.getElementById('friendNameHeader').textContent = `📚 ${friendUsername}'s Library`;
     }
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('searchInput').addEventListener('input', filterItems);
 
-    // Load friend collection
-    loadFriendCollection(friendId);
+    // Load initial data
+    loadTabData();
 });
 
 // Logout handler
@@ -50,20 +51,43 @@ function logout() {
     }
 }
 
-// Load friend collection
-async function loadFriendCollection(friendId) {
-    const userId = localStorage.getItem('userId');
-    const container = document.getElementById('collectionContainer');
+function switchTab(tab) {
+    currentTab = tab;
+    
+    // Update UI
+    const tabCollection = document.getElementById('tabCollection');
+    const tabWishlist = document.getElementById('tabWishlist');
+    
+    if (tab === 'collection') {
+        tabCollection.className = 'btn btn-primary';
+        tabWishlist.className = 'btn btn-secondary';
+    } else {
+        tabCollection.className = 'btn btn-secondary';
+        tabWishlist.className = 'btn btn-primary';
+    }
+    
+    loadTabData();
+}
 
+async function loadTabData() {
+    const params = new URLSearchParams(window.location.search);
+    const friendId = params.get('friendId');
+    const userId = localStorage.getItem('userId');
+    const container = document.getElementById('itemsContainer');
+    
+    container.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 40px;">Loading...</p>';
+
+    const endpoint = currentTab === 'collection' ? 'friends/collection' : 'friends/wishlist';
+    
     try {
-        const response = await fetch(`${API_BASE_URL}/friends/collection?userId=${encodeURIComponent(userId)}&friendId=${encodeURIComponent(friendId)}`);
+        const response = await fetch(`${API_BASE_URL}/${endpoint}?userId=${encodeURIComponent(userId)}&friendId=${encodeURIComponent(friendId)}`);
         
         if (response.status === 403) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 48px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);">
                     <div style="font-size: 3rem; margin-bottom: 16px;">🔒</div>
                     <h3>Access Denied</h3>
-                    <p>You must be friends with this user to view their collection.</p>
+                    <p>You must be friends with this user to view their ${currentTab}.</p>
                 </div>
             `;
             return;
@@ -73,21 +97,21 @@ async function loadFriendCollection(friendId) {
         friendItems = data.items || [];
         displayItems(friendItems);
     } catch (error) {
-        console.error('Error loading friend collection:', error);
-        container.innerHTML = '<p class="error-message">Error loading collection.</p>';
+        console.error(`Error loading friend ${currentTab}:`, error);
+        container.innerHTML = `<p class="error-message">Error loading ${currentTab}.</p>`;
     }
 }
 
 // Display items
 function displayItems(items) {
-    const container = document.getElementById('collectionContainer');
+    const container = document.getElementById('itemsContainer');
     
     if (!items || items.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 48px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);">
                 <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
                 <h3>No public items</h3>
-                <p>This user hasn't shared any items in their collection yet.</p>
+                <p>This user hasn't shared any items in their ${currentTab} yet.</p>
             </div>
         `;
         return;
@@ -110,7 +134,7 @@ function displayItems(items) {
                     ${item.artistAuthor ? `<p class="item-artist">${escapeHtml(item.artistAuthor)}</p>` : ''}
                     <div class="item-meta">
                         <span class="item-type">${item.mediaType}</span>
-                        <span class="item-condition">${item.condition || 'N/A'}</span>
+                        ${item.condition ? `<span class="item-condition">${item.condition}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -165,7 +189,7 @@ function openItemModal(itemId) {
                 <div><strong>Media Type:</strong> ${item.mediaType}</div>
                 ${item.artistAuthor ? `<div><strong>Artist/Author:</strong> ${escapeHtml(item.artistAuthor)}</div>` : ''}
                 ${item.year ? `<div><strong>Year:</strong> ${item.year}</div>` : ''}
-                <div><strong>Condition:</strong> ${item.condition || 'N/A'}</div>
+                ${item.condition ? `<div><strong>Condition:</strong> ${item.condition}</div>` : ''}
                 ${item.format ? `<div><strong>Format:</strong> ${escapeHtml(item.format)}</div>` : ''}
                 ${item.notes || item.description ? `<div><strong>Notes:</strong> ${escapeHtml(item.notes || item.description)}</div>` : ''}
             </div>
