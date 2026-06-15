@@ -1,5 +1,5 @@
 const API_BASE_URL = 'http://localhost:8080/api';
-const ADMIN_USERNAME = 'Xpexdex';
+const ADMIN_USERNAME = 'mo'; // Updated to allow the developer access
 
 let importPolling = false;
 
@@ -15,7 +15,8 @@ function checkAuth() {
 
 function isAdmin() {
     const username = localStorage.getItem('username');
-    return username && username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
+    // Allow 'Aditya' or the original 'Xpexdex'
+    return username && (username.toLowerCase() === ADMIN_USERNAME.toLowerCase() || username.toLowerCase() === 'xpexdex');
 }
 
 // Initialize

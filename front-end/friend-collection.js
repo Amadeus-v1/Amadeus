@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const friendId = params.get('friendId');
     const friendUsername = params.get('username');
+    const startTab = params.get('tab');
 
     if (!friendId) {
         window.location.href = 'friends.html';
@@ -33,10 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('friendNameHeader').textContent = `📚 ${friendUsername}'s Library`;
     }
 
+    if (startTab === 'wishlist') {
+        currentTab = 'wishlist';
+    }
+
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('searchInput').addEventListener('input', filterItems);
 
+    // Initial UI update for tabs
+    updateTabUI();
+    
     // Load initial data
     loadTabData();
 });
@@ -51,21 +59,22 @@ function logout() {
     }
 }
 
-function switchTab(tab) {
-    currentTab = tab;
-    
-    // Update UI
+function updateTabUI() {
     const tabCollection = document.getElementById('tabCollection');
     const tabWishlist = document.getElementById('tabWishlist');
     
-    if (tab === 'collection') {
+    if (currentTab === 'collection') {
         tabCollection.className = 'btn btn-primary';
         tabWishlist.className = 'btn btn-secondary';
     } else {
         tabCollection.className = 'btn btn-secondary';
         tabWishlist.className = 'btn btn-primary';
     }
-    
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    updateTabUI();
     loadTabData();
 }
 

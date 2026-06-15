@@ -34,7 +34,7 @@
 
             <header class="dashboard-header">
                 <h1>📚 Add New Item</h1>
-                <p>Add a new item to your physical media collection</p>
+                <p>Add a new item to your physical media collection or wishlist</p>
             </header>
 
             <main class="dashboard-main">
@@ -112,7 +112,7 @@
                     <div class="feature-section">
                         <h2>Privacy & Visibility</h2>
                         <div class="form-group">
-                            <label for="itemVisibility">Collection Visibility</label>
+                            <label for="itemVisibility">Visibility</label>
                             <select id="itemVisibility">
                                 <option value="public">🔓 Public (Friends can see this item)</option>
                                 <option value="private">🔒 Private (Only you can see this item)</option>
@@ -188,8 +188,9 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 16px; margin-top: 32px;">
-                        <button type="submit" class="btn btn-primary">Add to Collection</button>
+                    <div style="display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap;">
+                        <button type="submit" id="addToCollectionBtn" class="btn btn-primary">Add to Collection</button>
+                        <button type="submit" id="addToWishlistBtn" class="btn" style="background: var(--accent); color: white;">Add to Wishlist</button>
                         <button type="reset" class="btn btn-secondary">Clear</button>
                     </div>
 

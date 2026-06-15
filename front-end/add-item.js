@@ -4,6 +4,7 @@ let stream = null;
 
 let discogsAvailable = false;
 let discogsSearchTimeout = null;
+let submitTarget = 'collection';
 
 // Check if user is logged in
 function checkAuth() {
@@ -24,7 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('addItemForm').addEventListener('submit', handleAddItem);
+    
+    const addItemForm = document.getElementById('addItemForm');
+    addItemForm.addEventListener('submit', handleAddItem);
+
+    const addToCollectionBtn = document.getElementById('addToCollectionBtn');
+    const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+
+    if (addToCollectionBtn) {
+        addToCollectionBtn.addEventListener('click', () => {
+            submitTarget = 'collection';
+        });
+    }
+
+    if (addToWishlistBtn) {
+        addToWishlistBtn.addEventListener('click', () => {
+            submitTarget = 'wishlist';
+        });
+    }
     
     // UI Source Toggles
     const useCameraBtn = document.getElementById('useCameraBtn');
@@ -354,7 +372,7 @@ function showFormMessage(message, type = 'success') {
     
     if (type === 'success') {
         setTimeout(() => {
-            window.location.href = 'collection.html';
+            window.location.href = submitTarget === 'collection' ? 'collection.html' : 'wishlist.html';
         }, 1500);
     }
 }
@@ -365,8 +383,10 @@ async function handleAddItem(e) {
 
     const userId = localStorage.getItem('userId');
     const title = document.getElementById('itemTitle').value.trim();
+    const artist = document.getElementById('itemArtistAuthor').value.trim();
     const mediaType = document.getElementById('itemMediaType').value;
     const condition = document.getElementById('itemCondition').value;
+    const format = document.getElementById('itemFormat').value.trim();
     const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
     const estimatedValue = parseFloat(document.getElementById('itemEstimatedValue').value) || 0;
     const visibility = document.getElementById('itemVisibility') ? document.getElementById('itemVisibility').value : 'public';
@@ -386,11 +406,11 @@ async function handleAddItem(e) {
     const itemData = {
         title: title,
         mediaType: mediaType,
-        artistAuthor: document.getElementById('itemArtistAuthor').value.trim(),
+        artistAuthor: artist,
         releaseYear: releaseYear,
         description: document.getElementById('itemDescription').value.trim(),
         condition: condition,
-        format: document.getElementById('itemFormat').value.trim(),
+        format: format,
         quantity: quantity,
         estimatedValue: estimatedValue,
         coverUrl: coverUrl,
@@ -398,29 +418,42 @@ async function handleAddItem(e) {
         visibility: visibility
     };
 
-    console.log('[add-item.js] Sending item data:', itemData);
+    console.log('[add-item.js] Sending item data to:', submitTarget);
+
+    const endpoint = submitTarget === 'collection' ? '/collection/add' : '/wishlist/add';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/collection/add`, {
+        const payload = {
+            userId: userId,
+            title: title,
+            artist: artist,
+            mediaType: mediaType,
+            format: format,
+            year: releaseYear,
+            coverUrl: coverUrl,
+            visibility: visibility
+        };
+        
+        if (submitTarget === 'collection') {
+            payload.collection = itemData;
+        } else {
+            payload.wishlist = itemData;
+        }
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId,
-                title: title,
-                coverUrl: coverUrl,
-                visibility: visibility,
-                collection: itemData
-            })
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            showFormMessage(data.message || 'Failed to add item', 'error');
+            showFormMessage(data.message || `Failed to add item to ${submitTarget}`, 'error');
             return;
         }
 
-        showFormMessage('✓ Item added successfully! Redirecting...', 'success');
+        showFormMessage(`✓ Item added to ${submitTarget} successfully! Redirecting...`, 'success');
     } catch (error) {
         showFormMessage(`Error: ${error.message}`, 'error');
         console.error('Error adding item:', error);

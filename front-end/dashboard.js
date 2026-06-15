@@ -48,8 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Show admin button for Xpexdex only
-    if (username && username.toLowerCase() === 'xpexdex') {
+    // Show admin button for authorized administrators
+    const adminUsernames = ['xpexdex', 'aditya'];
+    if (username && adminUsernames.includes(username.toLowerCase())) {
         const adminBtn = document.getElementById('adminPanelBtn');
         if (adminBtn) adminBtn.classList.remove('hidden');
     }

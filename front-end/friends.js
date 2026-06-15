@@ -125,8 +125,7 @@ async function loadFriends() {
                 const friendId = friend.friendId || friend.id;
 
                 return `
-                    <div class="action-card" style="min-height: auto; padding: 20px; cursor: pointer; flex-direction: row; justify-content: flex-start; text-align: left;"
-                         onclick="viewFriendCollection('${friendId}', '${friendUsername}')">
+                    <div class="action-card" style="min-height: auto; padding: 20px; flex-direction: row; justify-content: flex-start; text-align: left; cursor: default;">
                         <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #b388ff); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 16px; overflow: hidden;">
                             ${avatarHtml}
                         </div>
@@ -136,7 +135,10 @@ async function loadFriends() {
                             ${bio ? `<div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(bio)}</div>` : ''}
                             ${genres.length > 0 ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${genres.map(g => `<span style="font-size:0.6rem;padding:2px 8px;border-radius:500px;background:rgba(124,77,255,0.1);color:var(--accent);font-weight:600;">${escapeHtml(g.trim())}</span>`).join('')}</div>` : ''}
                         </div>
-                        <div style="color: var(--accent); font-size: 0.8rem; font-weight: 700; flex-shrink: 0;">View ›</div>
+                        <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="viewFriendCollection('${friendId}', '${friendUsername}', 'collection')">Collection</button>
+                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="viewFriendCollection('${friendId}', '${friendUsername}', 'wishlist')">Wishlist</button>
+                        </div>
                     </div>
                 `;
             }));
@@ -164,9 +166,9 @@ function getMediaIcon(mediaType) {
     return icons[mediaType] || '📦';
 }
 
-// View a specific friend's collection
-function viewFriendCollection(friendId, friendUsername) {
-    window.location.href = `friend-collection.html?friendId=${encodeURIComponent(friendId)}&username=${encodeURIComponent(friendUsername)}`;
+// View a specific friend's collection or wishlist
+function viewFriendCollection(friendId, friendUsername, tab = 'collection') {
+    window.location.href = `friend-collection.html?friendId=${encodeURIComponent(friendId)}&username=${encodeURIComponent(friendUsername)}&tab=${tab}`;
 }
 
 function escapeHtml(text) {

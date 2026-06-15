@@ -5,6 +5,7 @@ let cameraActive = false;
 let scannerInterval = null;
 let isProcessing = false; // Prevent multiple simultaneous searches
 let lastScannedCode = null; // Prevent repeated scans of the same item
+let scanTarget = 'collection';
 
 // Check if user is logged in
 function checkAuth() {
@@ -46,6 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Focus on the input field for immediate scanning
     document.getElementById('barcodeInput').focus();
 });
+
+// Target Selection
+function setScanTarget(target) {
+    scanTarget = target;
+    const collBtn = document.getElementById('targetCollection');
+    const wishBtn = document.getElementById('targetWishlist');
+    
+    if (target === 'collection') {
+        collBtn.className = 'btn btn-primary';
+        wishBtn.className = 'btn btn-secondary';
+    } else {
+        collBtn.className = 'btn btn-secondary';
+        wishBtn.className = 'btn btn-primary';
+    }
+}
 
 // Logout handler
 function logout() {
@@ -121,8 +137,8 @@ async function handleBarcodeSearch(barcodeValue, autoAdd = false) {
             currentScanResult = data;
             
             if (autoAdd) {
-                showSuccess('✓ Item found! Adding to collection...');
-                await addItemFromBarcode(data, false); // false = don't redirect yet
+                showSuccess(`✓ Item found! Adding to ${scanTarget}...`);
+                await addItemFromBarcode(data, false, scanTarget); // false = don't redirect yet
                 if (cameraActive) stopCamera();
             } else {
                 showSuccess('✓ Item found!');
@@ -157,6 +173,7 @@ function displayResults(results) {
     resultsList.innerHTML = '';
 
     results.forEach((item) => {
+        const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
         const resultHtml = `
             <div class="result-item-card">
                 <div class="result-cover">
@@ -174,8 +191,11 @@ function displayResults(results) {
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick='addItemFromBarcode(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                        <button class="btn btn-primary" onclick='addItemFromBarcode(${itemJson}, true, "collection")'>
                             ✓ Add to Collection
+                        </button>
+                        <button class="btn" style="background: var(--accent); color: white;" onclick='addItemFromBarcode(${itemJson}, true, "wishlist")'>
+                            ✨ Add to Wishlist
                         </button>
                         <button class="btn btn-secondary" onclick="clearResults()">
                             🔄 Scan Again
@@ -196,9 +216,9 @@ function displayNoResults() {
     document.getElementById('noResults').classList.remove('hidden');
 }
 
-async function addItemFromBarcode(itemData, redirect = true) {
+async function addItemFromBarcode(itemData, redirect = true, target = 'collection') {
     const userId = localStorage.getItem('userId');
-    const collectionData = {
+    const entryData = {
         title: itemData.title || '',
         mediaType: itemData.mediaType || 'Other',
         artistAuthor: itemData.artist || '',
@@ -208,31 +228,47 @@ async function addItemFromBarcode(itemData, redirect = true) {
         quantity: 1,
         dateAdded: new Date().toISOString(),
         barcode: itemData.barcode || '',
-        coverUrl: itemData.coverUrl || ''
+        coverUrl: itemData.coverUrl || '',
+        visibility: 'public'
     };
 
+    const endpoint = target === 'collection' ? '/collection/add' : '/wishlist/add';
+    const payload = {
+        userId: userId,
+        title: itemData.title || 'Unknown',
+        artist: itemData.artist || '',
+        mediaType: itemData.mediaType || 'Other',
+        format: itemData.format || '',
+        year: itemData.year || 0,
+        barcode: itemData.barcode || '',
+        coverUrl: itemData.coverUrl || '',
+        visibility: 'public'
+    };
+    
+    if (target === 'collection') {
+        payload.collection = entryData;
+    } else {
+        payload.wishlist = entryData;
+    }
+
     try {
-        const response = await fetch(`${API_BASE_URL}/collection/add`, {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId,
-                title: itemData.title || 'Unknown',
-                coverUrl: itemData.coverUrl || '',
-                collection: collectionData
-            })
+            body: JSON.stringify(payload)
         });
 
         if (response.ok) {
             if (redirect) {
-                showSuccess('✓ Item added to collection!');
-                setTimeout(() => { window.location.href = 'collection.html'; }, 1500);
+                showSuccess(`✓ Item added to ${target}!`);
+                const redirectUrl = target === 'collection' ? 'collection.html' : 'wishlist.html';
+                setTimeout(() => { window.location.href = redirectUrl; }, 1500);
             } else {
-                showSuccess('✓ Item added!');
+                showSuccess(`✓ Item added to ${target}!`);
             }
         } else {
             const data = await response.json();
-            showError(data.message || 'Failed to add item');
+            showError(data.message || `Failed to add item to ${target}`);
         }
     } catch (error) {
         showError(`Error: ${error.message}`);
