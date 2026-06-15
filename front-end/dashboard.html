@@ -78,45 +78,11 @@
                         <span class="action-title">My Profile</span>
                         <span class="action-desc">Customize your profile</span>
                     </button>
-                    <button class="action-card" id="testApiBtn">
-                        <span class="action-icon">🧪</span>
-                        <span class="action-title">Test API</span>
-                        <span class="action-desc">Backend debug tools</span>
-                    </button>
                     <button class="action-card hidden" id="adminPanelBtn" style="border-color: #ef4444;">
                         <span class="action-icon">🔧</span>
                         <span class="action-title">Admin Panel</span>
                         <span class="action-desc">System management</span>
                     </button>
-                </section>
-
-                <!-- API Tester Section (Initially Hidden) -->
-                <section id="apiTesterSection" class="feature-section hidden">
-                    <h2>API Tester</h2>
-                    <div class="api-endpoints" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
-                            <h3>/api/hello</h3>
-                            <form class="endpoint-form" id="helloForm">
-                                <div class="form-group">
-                                    <input type="text" placeholder="Enter name" id="helloName" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
-                            </form>
-                            <div id="helloResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
-                        </div>
-
-                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
-                            <h3>/api/return</h3>
-                            <form class="endpoint-form" id="returnForm">
-                                <div class="form-group">
-                                    <textarea placeholder="key1=value1&key2=value2" id="returnParams" rows="3"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
-                            </form>
-                            <div id="returnResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" onclick="closeApiTester()" style="margin-top: 32px;">Close Tester</button>
                 </section>
 
                 <!-- Welcome Content -->

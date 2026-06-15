@@ -102,11 +102,12 @@ function renderProfile(p, editable) {
 async function loadCollectionStats(userId) {
     const statsContainer = document.getElementById('profileStats');
     try {
-        const res = await fetch(`${API_BASE_URL}/collection/me?userId=${encodeURIComponent(userId)}`);
+        // Fix: Use /collection/list instead of /collection/me to get the correct items array
+        const res = await fetch(`${API_BASE_URL}/collection/list?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         const items = data.items || [];
-        const totalItems = items.length;
-        const totalValue = items.reduce((sum, i) => sum + (parseFloat(i.estimatedValue) || 0), 0);
+        const totalItems = items.reduce((sum, i) => sum + (parseInt(i.quantity) || 1), 0);
+        const totalValue = items.reduce((sum, i) => sum + ((parseFloat(i.estimatedValue) || 0) * (parseInt(i.quantity) || 1)), 0);
         const mediaTypes = new Set(items.map(i => i.mediaType).filter(Boolean));
 
         statsContainer.innerHTML = `
@@ -135,7 +136,8 @@ async function loadCollectionStats(userId) {
 async function loadRecentItems(userId) {
     const container = document.getElementById('profileRecent');
     try {
-        const res = await fetch(`${API_BASE_URL}/collection/me?userId=${encodeURIComponent(userId)}`);
+        // Fix: Use /collection/list instead of /collection/me
+        const res = await fetch(`${API_BASE_URL}/collection/list?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         const items = (data.items || []).slice(0, 6);
 

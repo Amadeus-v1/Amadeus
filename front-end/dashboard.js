@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'connectFriendsBtn': 'friends.html',
         'browseMarketplaceBtn': 'marketplace.html',
         'myProfileBtn': 'profile.html',
-        'testApiBtn': showApiTester,
         'adminPanelBtn': 'admin.html'
     };
 
@@ -54,17 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminBtn = document.getElementById('adminPanelBtn');
         if (adminBtn) adminBtn.classList.remove('hidden');
     }
-
-    // API Tester forms
-    const helloForm = document.getElementById('helloForm');
-    if (helloForm) {
-        helloForm.addEventListener('submit', testHelloEndpoint);
-    }
-
-    const returnForm = document.getElementById('returnForm');
-    if (returnForm) {
-        returnForm.addEventListener('submit', testReturnEndpoint);
-    }
 });
 
 // Logout handler
@@ -74,75 +62,6 @@ function logout() {
         localStorage.removeItem('userId');
         localStorage.removeItem('username');
         window.location.href = 'login.html';
-    }
-}
-
-// Show API Tester
-function showApiTester() {
-    const mainContent = document.getElementById('mainContent');
-    const apiTesterSection = document.getElementById('apiTesterSection');
-    if (mainContent) mainContent.classList.add('hidden');
-    if (apiTesterSection) apiTesterSection.classList.remove('hidden');
-}
-
-// Close API Tester
-function closeApiTester() {
-    const mainContent = document.getElementById('mainContent');
-    const apiTesterSection = document.getElementById('apiTesterSection');
-    if (apiTesterSection) apiTesterSection.classList.add('hidden');
-    if (mainContent) mainContent.classList.remove('hidden');
-}
-
-// Test hello endpoint
-async function testHelloEndpoint(e) {
-    e.preventDefault();
-    const name = document.getElementById('helloName').value.trim();
-    const resultDiv = document.getElementById('helloResult');
-    
-    if (resultDiv) {
-        resultDiv.innerHTML = 'Testing...';
-        resultDiv.classList.remove('hidden');
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/hello?name=${encodeURIComponent(name)}`);
-        const data = await response.json();
-        if (resultDiv) {
-            resultDiv.innerHTML = `<strong>Response:</strong> <code>${escapeHtml(data.message)}</code>`;
-        }
-    } catch (error) {
-        if (resultDiv) {
-            resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
-        }
-    }
-}
-
-// Test return endpoint
-async function testReturnEndpoint(e) {
-    e.preventDefault();
-    const params = document.getElementById('returnParams').value.trim();
-    const resultDiv = document.getElementById('returnResult');
-    
-    if (!params) {
-        alert('Please enter parameters');
-        return;
-    }
-    
-    if (resultDiv) {
-        resultDiv.innerHTML = 'Testing...';
-        resultDiv.classList.remove('hidden');
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/return?${params}`);
-        const data = await response.json();
-        if (resultDiv) {
-            resultDiv.innerHTML = `<strong>Response:</strong> <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
-        }
-    } catch (error) {
-        if (resultDiv) {
-            resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
-        }
     }
 }
 
