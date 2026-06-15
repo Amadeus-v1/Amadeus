@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://34.48.220.234:8080/api';
 
 // Check if user is logged in
 function checkAuth() {
