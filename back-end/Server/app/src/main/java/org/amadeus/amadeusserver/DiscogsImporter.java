@@ -109,6 +109,7 @@ public class DiscogsImporter {
                     initializeDatabase();
                     parseAndImport(gzFile);
 
+                    importStatus = "building_fts";
                     buildFtsIndex();
 
                     importStatus = "complete";
@@ -132,6 +133,46 @@ public class DiscogsImporter {
         } else {
             JSONObject result = new JSONObject();
             result.put("message", "Import already in progress");
+            result.put("status", importStatus);
+            result.put("recordsProcessed", progressCount.get());
+            return result;
+        }
+    }
+
+    /**
+     * Start rebuilding the FTS index from existing data in a background thread.
+     */
+    public static JSONObject startRebuildFts() {
+        if (importing.compareAndSet(false, true)) {
+            progressCount.set(0);
+            importStatus = "building_fts";
+            importError = null;
+
+            Thread rebuildThread = new Thread(() -> {
+                try {
+                    System.out.println("[DiscogsImporter] Starting standalone FTS index rebuild...");
+                    buildFtsIndex();
+                    importStatus = "complete";
+                    System.out.println("[DiscogsImporter] Standalone FTS index rebuild complete.");
+                } catch (Exception e) {
+                    importStatus = "error";
+                    importError = e.getMessage();
+                    System.err.println("[DiscogsImporter] FTS rebuild failed: " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    importing.set(false);
+                }
+            }, "discogs-fts-rebuilder");
+            rebuildThread.setDaemon(true);
+            rebuildThread.start();
+
+            JSONObject result = new JSONObject();
+            result.put("message", "FTS rebuild started in background");
+            result.put("status", "building_fts");
+            return result;
+        } else {
+            JSONObject result = new JSONObject();
+            result.put("message", "An import or rebuild is already in progress");
             result.put("status", importStatus);
             result.put("recordsProcessed", progressCount.get());
             return result;
@@ -230,7 +271,7 @@ public class DiscogsImporter {
 
     private static void buildFtsIndex() throws SQLException {
         System.out.println("[DiscogsImporter] Building full-text search index...");
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = getImportConnection(); Statement stmt = conn.createStatement()) {
             // Drop and rebuild FTS table
             stmt.execute("DROP TABLE IF EXISTS discogs_fts;");
             stmt.execute("""
@@ -245,8 +286,10 @@ public class DiscogsImporter {
                 SELECT id, COALESCE(title,''), COALESCE(artist,''), COALESCE(genres,''), COALESCE(labels,''), COALESCE(barcode,'')
                 FROM discogs_releases;
             """);
+            System.out.println("[DiscogsImporter] Optimizing FTS index...");
+            stmt.execute("INSERT INTO discogs_fts(discogs_fts) VALUES('optimize');");
         }
-        System.out.println("[DiscogsImporter] FTS index built successfully.");
+        System.out.println("[DiscogsImporter] FTS index built and optimized successfully.");
     }
 
     private static void parseAndImport(Path gzFile) throws Exception {

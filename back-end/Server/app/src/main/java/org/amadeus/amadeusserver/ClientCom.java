@@ -817,6 +817,16 @@ public class ClientCom {
         sendJsonResponse(exchange, 202, result);
     }
 
+    public static void handleDiscogsRebuildFtsRequest(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        JSONObject result = DiscogsImporter.startRebuildFts();
+        sendJsonResponse(exchange, 202, result);
+    }
+
     public static void handleDiscogsReleaseRequest(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendError(exchange, 405, "Method Not Allowed");

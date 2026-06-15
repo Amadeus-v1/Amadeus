@@ -69,6 +69,7 @@ public class API {
         server.createContext("/api/discogs/search", addCORSHeaders(ClientCom::handleDiscogsSearchRequest));
         server.createContext("/api/discogs/status", addCORSHeaders(ClientCom::handleDiscogsStatusRequest));
         server.createContext("/api/discogs/import", addCORSHeaders(ClientCom::handleDiscogsImportRequest));
+        server.createContext("/api/discogs/rebuild-fts", addCORSHeaders(ClientCom::handleDiscogsRebuildFtsRequest));
         server.createContext("/api/discogs/release", addCORSHeaders(ClientCom::handleDiscogsReleaseRequest));
         server.createContext("/api/discogs/related", addCORSHeaders(ClientCom::handleDiscogsRelatedRequest));
 

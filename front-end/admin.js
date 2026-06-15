@@ -76,7 +76,7 @@ async function refreshDiscogsStatus() {
 
         const status = data.importStatus;
         if (status && status.importing) {
-            importState.textContent = status.status;
+            importState.textContent = status.status === 'building_fts' ? 'Indexing' : status.status;
             importState.style.color = '#f59e0b';
             showImportProgress(status);
             if (!importPolling) startPolling();
@@ -107,6 +107,9 @@ async function startImport() {
     const btn = document.getElementById('startImportBtn');
     btn.disabled = true;
     btn.textContent = '⏳ Starting...';
+    
+    const rebuildBtn = document.getElementById('rebuildFtsBtn');
+    if (rebuildBtn) rebuildBtn.disabled = true;
 
     try {
         const response = await fetch(`${API_BASE_URL}/discogs/import`, { method: 'POST' });
@@ -117,7 +120,30 @@ async function startImport() {
     } catch (e) {
         btn.disabled = false;
         btn.textContent = '⬇️ Download & Import Latest Dump';
+        if (rebuildBtn) rebuildBtn.disabled = false;
         alert('Failed to start import: ' + e.message);
+    }
+}
+
+async function rebuildFts() {
+    const btn = document.getElementById('rebuildFtsBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Starting...';
+
+    const importBtn = document.getElementById('startImportBtn');
+    if (importBtn) importBtn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discogs/rebuild-fts`, { method: 'POST' });
+        const data = await response.json();
+
+        showImportProgress({ status: 'building_fts', recordsProcessed: 0 });
+        startPolling();
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '⚡ Rebuild FTS Index';
+        if (importBtn) importBtn.disabled = false;
+        alert('Failed to start FTS rebuild: ' + e.message);
     }
 }
 
@@ -146,6 +172,12 @@ async function pollImport() {
             const btn = document.getElementById('startImportBtn');
             btn.disabled = false;
             btn.textContent = '⬇️ Download & Import Latest Dump';
+
+            const rebuildBtn = document.getElementById('rebuildFtsBtn');
+            if (rebuildBtn) {
+                rebuildBtn.disabled = false;
+                rebuildBtn.textContent = '⚡ Rebuild FTS Index';
+            }
         } else if (status.status === 'error') {
             importPolling = false;
             const progressBar = document.getElementById('importProgressBar');
@@ -156,9 +188,26 @@ async function pollImport() {
             const btn = document.getElementById('startImportBtn');
             btn.disabled = false;
             btn.textContent = '🔄 Retry Import';
+
+            const rebuildBtn = document.getElementById('rebuildFtsBtn');
+            if (rebuildBtn) {
+                rebuildBtn.disabled = false;
+                rebuildBtn.textContent = '⚡ Rebuild FTS Index';
+            }
         } else {
             importPolling = false;
             hideImportProgress();
+            
+            const btn = document.getElementById('startImportBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '⬇️ Download & Import Latest Dump';
+            }
+            const rebuildBtn = document.getElementById('rebuildFtsBtn');
+            if (rebuildBtn) {
+                rebuildBtn.disabled = false;
+                rebuildBtn.textContent = '⚡ Rebuild FTS Index';
+            }
         }
     } catch (e) {
         setTimeout(pollImport, 5000);
@@ -177,18 +226,29 @@ function showImportProgress(status) {
         'starting': '⏳ Initializing import...',
         'downloading': '⬇️ Downloading Discogs data dump...',
         'parsing': '📀 Parsing XML & importing to database...',
+        'building_fts': '⚡ Building Full-Text Search (FTS) index...',
     };
 
     statusText.textContent = statusMessages[status.status] || `Status: ${status.status}`;
     statusText.style.color = 'var(--text)';
-    counter.textContent = `${(status.recordsProcessed || 0).toLocaleString()} records`;
 
-    // Animate the progress bar indeterminately
-    fill.style.width = status.status === 'parsing' ? '60%' : status.status === 'downloading' ? '20%' : '5%';
+    if (status.status === 'building_fts') {
+        counter.textContent = 'Indexing database...';
+        fill.style.width = '80%';
+    } else {
+        counter.textContent = `${(status.recordsProcessed || 0).toLocaleString()} records`;
+        fill.style.width = status.status === 'parsing' ? '60%' : status.status === 'downloading' ? '20%' : '5%';
+    }
     
     const btn = document.getElementById('startImportBtn');
     btn.disabled = true;
     btn.textContent = '⏳ Import in progress...';
+
+    const rebuildBtn = document.getElementById('rebuildFtsBtn');
+    if (rebuildBtn) {
+        rebuildBtn.disabled = true;
+        rebuildBtn.textContent = '⏳ Indexing in progress...';
+    }
 }
 
 function hideImportProgress() {
