@@ -1,0 +1,50 @@
+# Databases and database runtime files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+**/marketplace.db
+**/mediaCatalog.db
+**/userAccounts.db
+**/discogs.db
+**/config.db
+
+# Discogs Data Dumps
+*.xml
+*.xml.gz
+*.gz
+discogs_releases.xml.gz
+
+# Cache and media storage
+covers/
+**/covers/
+cache/
+**/cache/
+.tmp/
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Build artifacts
+build/
+**/build/
+.gradle/
+**/bin/
+**/out/
+*.class
+**/*.class
+*.jar
+**/*.jar
+*.war
+**/*.war
+*.ear
+**/*.ear
+*.log
+

@@ -24,6 +24,14 @@ dependencies {
     // This dependency is used by the application.
     implementation libs.guava
     implementation 'org.json:json:20240303'
+    implementation 'org.xerial:sqlite-jdbc:3.45.3.0'
+    
+    // SLF4J implementation to fix "Failed to load class" warning
+    implementation libs.slf4j.simple
+
+    // ZXing for Barcode scanning
+    implementation libs.zxing.core
+    implementation libs.zxing.javase
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -41,4 +49,12 @@ application {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks.register('importDiscogs', JavaExec) {
+    group = 'application'
+    description = 'Import a Discogs releases XML or XML.GZ dump into the local Discogs barcode index.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.amadeus.amadeusserver.DiscogsStore'
+    systemProperty 'amadeus.discogs.db.url', System.getProperty('amadeus.discogs.db.url', 'jdbc:sqlite:discogsCatalog.db')
 }

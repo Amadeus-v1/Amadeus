@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Add Item</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <h1>📚 Add New Item</h1>
+                <p>Add a new item to your physical media collection</p>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="feature-section" style="text-align: center; border-color: var(--accent);">
+                    <h3 style="margin-bottom: 12px;">⚡ Quick Barcode Lookup</h3>
+                    <p style="margin-bottom: 20px; color: var(--text);">Use your camera or a scanner for instant item lookup</p>
+                    <a href="barcode.html" class="btn btn-primary" style="text-decoration: none;">📱 Go to Barcode Scanner</a>
+                </div>
+
+                <!-- Discogs Library Search -->
+                <div class="feature-section" id="discogsSection" style="border-color: var(--accent); position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin-bottom: 0;">🎵 Search Discogs Library</h2>
+                        <span id="discogsStatus" style="font-size: 0.75rem; padding: 4px 12px; border-radius: 500px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;"></span>
+                    </div>
+                    <p style="color: var(--muted); margin-bottom: 20px;">Search millions of real music releases — CDs, vinyl, cassettes, and more. Select a result to auto-fill the form below.</p>
+                    <input 
+                        type="text" 
+                        id="discogsSearchInput" 
+                        placeholder="🔍 Search by artist, album title, or barcode..."
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 1rem;"
+                    >
+                    <div id="discogsSearching" class="hidden" style="text-align: center; padding: 16px; color: var(--muted);">
+                        <span style="animation: pulse 1.5s infinite;">Searching Discogs...</span>
+                    </div>
+                    <div id="discogsResults" style="margin-top: 16px; max-height: 500px; overflow-y: auto;"></div>
+                    
+                    <!-- Notice when data not available -->
+                    <div id="discogsImportBanner" class="hidden" style="margin-top: 16px; padding: 16px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                        <p style="color: var(--muted); font-size: 0.85rem;">📦 Discogs data not imported yet. An admin can import it from the <a href="admin.html" style="color: var(--accent);">Admin Panel</a>.</p>
+                    </div>
+                </div>
+
+                <form id="addItemForm">
+                    <div class="feature-section">
+                        <h2>Basic Information</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                            <div class="form-group">
+                                <label for="itemTitle">Title *</label>
+                                <input type="text" id="itemTitle" placeholder="e.g., The Great Gatsby" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="itemMediaType">Media Type *</label>
+                                <select id="itemMediaType" required>
+                                    <option value="">Select media type...</option>
+                                    <option value="Book">📖 Book</option>
+                                    <option value="Vinyl">🎵 Vinyl Record</option>
+                                    <option value="CD">💿 CD</option>
+                                    <option value="DVD">🎬 DVD</option>
+                                    <option value="Blu-ray">📀 Blu-ray</option>
+                                    <option value="Cassette">📼 Cassette Tape</option>
+                                    <option value="Video Game">🎮 Video Game</option>
+                                    <option value="Collectible">✨ Collectible</option>
+                                    <option value="Comic">💭 Comic/Manga</option>
+                                    <option value="Other">📦 Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                            <div class="form-group">
+                                <label for="itemArtistAuthor">Artist / Author</label>
+                                <input type="text" id="itemArtistAuthor" placeholder="e.g., Pink Floyd">
+                            </div>
+                            <div class="form-group">
+                                <label for="itemReleaseDate">Release Date</label>
+                                <input type="date" id="itemReleaseDate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemDescription">Notes</label>
+                            <textarea id="itemDescription" placeholder="Add personal notes..." rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="feature-section">
+                        <h2>Privacy & Visibility</h2>
+                        <div class="form-group">
+                            <label for="itemVisibility">Collection Visibility</label>
+                            <select id="itemVisibility">
+                                <option value="public">🔓 Public (Friends can see this item)</option>
+                                <option value="private">🔒 Private (Only you can see this item)</option>
+                            </select>
+                            <p style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">Private items are hidden from your friends on the Friends page.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-section">
+                        <h2>Media & Cover</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div class="form-group">
+                                    <label>Cover Source</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                        <button type="button" class="btn btn-secondary" id="useCameraBtn" style="flex: 1; padding: 10px; font-size: 0.8rem;">📷 Use Camera</button>
+                                        <button type="button" class="btn btn-secondary" id="useUrlBtn" style="flex: 1; padding: 10px; font-size: 0.8rem;">🔗 Image URL</button>
+                                    </div>
+                                    
+                                    <div id="cameraSection" class="hidden">
+                                        <div class="camera-preview-container">
+                                            <video id="cameraVideo" autoplay playsinline></video>
+                                            <div class="camera-controls">
+                                                <button type="button" class="btn btn-primary" id="captureBtn" style="padding: 10px 20px;">Capture Photo</button>
+                                                <button type="button" class="btn btn-secondary" id="closeCameraBtn" style="padding: 10px 20px;">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="urlSection">
+                                        <label for="itemCoverUrl" style="font-size: 0.75rem; color: var(--muted);">Image URL</label>
+                                        <input type="url" id="itemCoverUrl" placeholder="https://example.com/image.jpg">
+                                    </div>
+                                    
+                                    <canvas id="photoCanvas" class="hidden"></canvas>
+                                </div>
+                            </div>
+                            <div id="coverPreviewContainer" style="display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px; position: relative; overflow: hidden;">
+                                <span style="color: var(--muted); font-size: 0.8rem;">Cover Preview</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-section">
+                        <h2>Details & Condition</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                            <div class="form-group">
+                                <label for="itemCondition">Condition *</label>
+                                <select id="itemCondition" required>
+                                    <option value="">Select condition...</option>
+                                    <option value="Mint">Mint</option>
+                                    <option value="Near Mint">Near Mint</option>
+                                    <option value="Very Good">Very Good</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="itemQuantity">Quantity *</label>
+                                <input type="number" id="itemQuantity" value="1" min="1" required>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                            <div class="form-group">
+                                <label for="itemEstimatedValue">Value ($)</label>
+                                <input type="number" id="itemEstimatedValue" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="itemFormat">Format</label>
+                                <input type="text" id="itemFormat" placeholder="e.g., Hardcover">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; margin-top: 32px;">
+                        <button type="submit" class="btn btn-primary">Add to Collection</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+
+                    <div id="formMessage" class="error-message hidden"></div>
+                </form>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="add-item.js"></script>
+</body>
+</html>

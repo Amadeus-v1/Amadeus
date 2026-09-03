@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Theme Toggle (Fixed Position for Login) -->
+    <div style="position: absolute; top: 20px; right: 20px;">
+        <div class="theme-toggle-container">
+            <span class="theme-label">Mode</span>
+            <label class="switch">
+                <input type="checkbox" id="themeCheckbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>🎭 Amadeus</h1>
+                <p>Collection Management & Marketplace</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <h2>Login</h2>
+                
+                <div class="form-group">
+                    <label for="loginUsername">Username or Email</label>
+                    <input 
+                        type="text" 
+                        id="loginUsername" 
+                        placeholder="Username or email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        placeholder="Password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+                
+                <div id="loginError" class="error-message hidden"></div>
+            </form>
+
+            <!-- Toggle to Register -->
+            <div class="auth-toggle">
+                <p>Don't have an account? <a href="#" onclick="toggleForms(event)">Create one</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form hidden">
+                <h2>Create Account</h2>
+                
+                <div class="form-group">
+                    <label for="regUsername">Username</label>
+                    <input 
+                        type="text" 
+                        id="regUsername" 
+                        placeholder="Choose a username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input 
+                        type="email" 
+                        id="regEmail" 
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="regPassword" 
+                        placeholder="Enter a strong password"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="regPasswordConfirm">Confirm Password</label>
+                    <input 
+                        type="password" 
+                        id="regPasswordConfirm" 
+                        placeholder="Confirm your password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                
+                <div id="registerError" class="error-message hidden"></div>
+            </form>
+
+            <!-- Toggle to Login -->
+            <div class="auth-toggle">
+                <p>Already have an account? <a href="#" onclick="toggleForms(event)">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>

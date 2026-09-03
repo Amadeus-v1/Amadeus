@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Barcode Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include Quagga2 for barcode scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <h1>📱 Barcode Scanner</h1>
+                <p>Scan a physical barcode or enter the number manually</p>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="scanner-page-shell">
+                    <div id="errorMessage" class="error-message hidden"></div>
+                    <div id="successMessage" class="error-message hidden" style="background-color: #10b981;"></div>
+
+                    <!-- Scanner Toggle -->
+                    <div class="feature-section" style="text-align: center;">
+                        <button id="toggleCameraButton" class="btn btn-primary btn-full" style="padding: 20px; font-size: 1.1rem; margin-bottom: 12px;">
+                            📷 Open Camera Scanner
+                        </button>
+                        <p style="font-size: 0.85rem; color: var(--muted);">Point your camera at a barcode to scan automatically</p>
+                    </div>
+
+                    <!-- Camera Viewport -->
+                    <div id="cameraSection" class="feature-section camera-section hidden">
+                        <div class="camera-section-header">
+                            <h3 style="margin: 0; font-size: 1rem;">📹 Live Scanner</h3>
+                            <button id="stopCameraButton" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; color: #ff4444; border-color: #ff4444;">Close Camera</button>
+                        </div>
+                        <div id="interactive" class="viewport">
+                            <div id="scannerStatus" class="scanner-status-overlay hidden">
+                                <div class="status-content">
+                                    <div class="status-spinner"></div>
+                                    <span id="statusMessage">Evaluating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Input (Always available as fallback) -->
+                    <div class="feature-section">
+                        <h3 style="margin-bottom: 16px; font-size: 1rem;">⌨️ Manual Search</h3>
+                        <div class="barcode-manual-row">
+                            <input 
+                                type="text" 
+                                id="barcodeInput" 
+                                placeholder="Enter barcode number..."
+                                style="font-family: monospace; font-size: 1.1rem;"
+                            >
+                            <button id="scanButton" class="btn btn-secondary">Search</button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="resultsSection" class="hidden">
+                        <h2 style="margin-bottom: 24px;">✨ Match Found</h2>
+                        <div id="resultsList"></div>
+                    </div>
+
+                    <div id="noResults" class="feature-section hidden" style="text-align: center;">
+                        <p style="margin-bottom: 16px;">We couldn't find an item with that barcode.</p>
+                        <div class="button-row-center">
+                            <a href="add-item.html" class="btn btn-primary">Add Manually</a>
+                            <button class="btn btn-secondary" onclick="clearResults()">Try Another</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="barcode.js"></script>
+</body>
+</html>

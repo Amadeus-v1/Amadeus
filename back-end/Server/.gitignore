@@ -1,8 +1,36 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# Gradle and build outputs
+.gradle/
+build/
+app/build/
+**/build/
 
-# Ignore Gradle build output directory
-build
+# Java / JVM runtime artifacts
+*.class
+*.jar
+*.war
+*.ear
+bin/
+out/
 
-# Ignore Kotlin plugin data
-.kotlin
+# Temporary and local runtime files
+*.log
+*.tmp
+*.pid
+*.db
+*.db-journal
+covers/
+cache/
+.tmp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+*.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Project-local runtime data
+app/src/main/java/org/amadeus/amadeusserver/userAccounts.json

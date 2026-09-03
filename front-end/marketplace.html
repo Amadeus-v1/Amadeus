@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Marketplace</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <h1>🛍️ Marketplace</h1>
+                <p>Buy and trade items with other collectors worldwide</p>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- Tabs -->
+                <div style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="tabBrowse" onclick="switchTab('browse')" style="font-size: 0.8rem; padding: 10px 24px;">Browse All</button>
+                    <button class="btn btn-secondary" id="tabMyListings" onclick="switchTab('mylistings')" style="font-size: 0.8rem; padding: 10px 24px;">My Listings</button>
+                    <button class="btn btn-secondary" id="tabDiscogsSearch" onclick="switchTab('discogs')" style="font-size: 0.8rem; padding: 10px 24px;">🎵 Search Discogs</button>
+                    <a href="collection.html" class="btn btn-secondary" style="font-size: 0.8rem; padding: 10px 24px; text-decoration: none; margin-left: auto;">+ Sell an Item</a>
+                </div>
+
+                <!-- Browse Tab: Search and Filters -->
+                <div id="browseTab">
+                    <div class="feature-section" style="margin-bottom: 24px; padding: 24px;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                            <input 
+                                type="text" 
+                                id="marketplaceSearch" 
+                                placeholder="🔍 Search items for sale..."
+                                style="flex: 2; min-width: 200px; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);"
+                            >
+                            <select id="filterMediaType" style="flex: 0.7; min-width: 140px; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);">
+                                <option value="">All Types</option>
+                                <option value="Vinyl">🎵 Vinyl</option>
+                                <option value="CD">💿 CD</option>
+                                <option value="Cassette">📼 Cassette</option>
+                                <option value="DVD">🎬 DVD</option>
+                                <option value="Blu-ray">📀 Blu-ray</option>
+                                <option value="Book">📖 Book</option>
+                                <option value="Video Game">🎮 Video Game</option>
+                                <option value="Collectible">✨ Collectible</option>
+                            </select>
+                            <select id="sortListings" style="flex: 0.7; min-width: 140px; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);">
+                                <option value="newest">Newest First</option>
+                                <option value="priceLow">Price: Low → High</option>
+                                <option value="priceHigh">Price: High → Low</option>
+                                <option value="titleAZ">Title: A → Z</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Listings Grid -->
+                    <div id="marketplaceContainer" class="collections-list">
+                        <p style="text-align: center; color: var(--muted); padding: 40px;">Browsing active listings...</p>
+                    </div>
+                </div>
+
+                <!-- My Listings Tab -->
+                <div id="myListingsTab" class="hidden">
+                    <div id="myListingsContainer" class="collections-list">
+                        <p style="text-align: center; color: var(--muted); padding: 40px;">Loading your listings...</p>
+                    </div>
+                </div>
+
+                <!-- Discogs Search Tab -->
+                <div id="discogsTab" class="hidden">
+                    <div class="feature-section" style="margin-bottom: 24px; padding: 24px;">
+                        <h3 style="margin-bottom: 12px;">🎵 Browse Discogs Catalog</h3>
+                        <p style="color: var(--muted); margin-bottom: 16px; font-size: 0.9rem;">Search millions of music releases in the Discogs database to find items you want.</p>
+                        <input 
+                            type="text" 
+                            id="discogsMarketplaceSearch" 
+                            placeholder="🔍 Search Discogs by artist, album, barcode..."
+                            style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);"
+                        >
+                    </div>
+                    <div id="discogsMarketplaceResults">
+                        <div style="text-align: center; padding: 40px; color: var(--muted);">
+                            <div style="font-size: 3rem; margin-bottom: 16px;">🎵</div>
+                            <p>Search the Discogs catalog to discover releases</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Buy Modal -->
+        <div id="buyModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+            <div class="feature-section" style="width: 90%; max-width: 500px; background: var(--card-bg); position: relative;">
+                <button onclick="closeBuyModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text); font-size: 2rem; cursor: pointer;">&times;</button>
+                <h2 id="buyModalTitle">Purchase Item</h2>
+                <div id="buyModalBody" style="margin: 24px 0;"></div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="confirmPurchase()">Confirm Buy</button>
+                    <button class="btn btn-secondary" onclick="closeBuyModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="marketplace.js"></script>
+</body>
+</html>

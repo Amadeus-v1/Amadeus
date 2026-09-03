@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Explore Music</title>
+    <meta name="description" content="Discover millions of music releases — vinyl, CDs, cassettes and more">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand"><h1>🎭 Amadeus</h1></div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch"><input type="checkbox" id="themeCheckbox"><span class="slider"></span></label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <div>
+                    <h1>🔍 Explore Music</h1>
+                    <p>Discover millions of releases from around the world</p>
+                </div>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- Search Bar -->
+                <div class="feature-section" style="position: relative;">
+                    <input type="text" id="exploreSearch" placeholder="Search by artist, album, label, or barcode..."
+                        style="width: 100%; padding: 16px 20px; font-size: 1.05rem; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text);">
+                </div>
+
+                <!-- Genre Tags -->
+                <div id="genreTags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;"></div>
+
+                <!-- Filters -->
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;">
+                    <input type="text" id="filterArtist" placeholder="Filter by Artist..."
+                        style="padding: 10px 16px; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); min-width: 160px; height: 42px; box-sizing: border-box; transition: all 0.2s;"
+                        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                    <select id="filterGenre" style="min-width: 160px;">
+                        <option value="">All Genres</option>
+                    </select>
+                    <select id="filterFormat" style="min-width: 140px;">
+                        <option value="">All Formats</option>
+                        <option value="Vinyl">🎵 Vinyl</option>
+                        <option value="CD">💿 CD</option>
+                        <option value="Cassette">📼 Cassette</option>
+                        <option value="DVD">🎬 DVD</option>
+                        <option value="Blu-ray">📀 Blu-ray</option>
+                    </select>
+                    <select id="filterDecade" style="min-width: 140px;">
+                        <option value="">All Decades</option>
+                        <option value="2020-2029">2020s</option>
+                        <option value="2010-2019">2010s</option>
+                        <option value="2000-2009">2000s</option>
+                        <option value="1990-1999">1990s</option>
+                        <option value="1980-1989">1980s</option>
+                        <option value="1970-1979">1970s</option>
+                        <option value="1960-1969">1960s</option>
+                        <option value="1950-1959">1950s</option>
+                        <option value="0-1949">Pre-1950</option>
+                    </select>
+                    <select id="filterCountry" style="min-width: 140px;">
+                        <option value="">All Countries</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="clearFilters()" style="font-size: 0.8rem;">✕ Clear</button>
+                </div>
+
+                <!-- Results Info -->
+                <div id="resultsInfo" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <span id="resultCount" style="color: var(--muted); font-size: 0.85rem;"></span>
+                    <span style="color: var(--muted); font-size: 0.7rem;">Music data powered by Discogs</span>
+                </div>
+
+                <!-- Results Grid -->
+                <div id="exploreResults" class="collections-list"></div>
+
+                <!-- Load More -->
+                <div id="loadMoreSection" class="hidden" style="text-align: center; padding: 32px;">
+                    <button class="btn btn-secondary" onclick="loadMore()" id="loadMoreBtn">Load More Results</button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" style="text-align: center; padding: 60px 24px; color: var(--muted);">
+                    <div style="font-size: 4rem; margin-bottom: 16px;">🎶</div>
+                    <h3 style="color: var(--text); margin-bottom: 8px;">Start Exploring</h3>
+                    <p>Search for an artist, album, or genre to discover music</p>
+                </div>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus — Music data powered by <a href="https://www.discogs.com" target="_blank" style="color: var(--accent); text-decoration: none;">Discogs</a></p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="explore.js"></script>
+</body>
+</html>

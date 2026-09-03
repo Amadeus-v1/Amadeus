@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="dashboard.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Dashboard</a>
+            </div>
+
+            <header class="dashboard-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>🔧 Admin Panel</h1>
+                        <p>System management for authorized administrators only</p>
+                    </div>
+                    <span style="font-size: 0.75rem; padding: 6px 16px; border-radius: 500px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(239, 68, 68, 0.15); color: #ef4444;">Admin Only</span>
+                </div>
+            </header>
+
+            <!-- Access Denied (shown to non-admin users) -->
+            <div id="accessDenied" class="hidden">
+                <div class="feature-section" style="text-align: center; border-color: #ef4444;">
+                    <div style="font-size: 4rem; margin-bottom: 16px;">🚫</div>
+                    <h2 style="color: #ef4444;">Access Denied</h2>
+                    <p style="color: var(--muted); margin-top: 12px;">This page is restricted to authorized administrators.</p>
+                    <a href="dashboard.html" class="btn btn-secondary" style="margin-top: 20px; text-decoration: none;">Return to Dashboard</a>
+                </div>
+            </div>
+
+            <!-- Admin Content (shown only to Xpexdex) -->
+            <main id="adminContent" class="dashboard-main hidden">
+                <!-- Discogs Data Management -->
+                <div class="feature-section" style="border-color: var(--accent);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>📀 Discogs Data Management</h2>
+                        <span id="discogsStatusBadge" style="font-size: 0.75rem; padding: 4px 12px; border-radius: 500px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;"></span>
+                    </div>
+                    <p style="color: var(--muted); margin-bottom: 24px;">Manage the Discogs music database import. This downloads the full monthly releases dump (~10.3 GB compressed) and imports it into the local SQLite database for search.</p>
+
+                    <!-- Status Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 800; color: var(--accent);" id="discogsRecordCount">—</div>
+                            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700;">Total Releases</div>
+                        </div>
+                        <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 800; color: var(--accent);" id="discogsDbStatus">—</div>
+                            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700;">Database Status</div>
+                        </div>
+                        <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 800; color: var(--accent);" id="discogsImportState">—</div>
+                            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700;">Import Status</div>
+                        </div>
+                    </div>
+
+                    <!-- Import Controls -->
+                    <div style="background: var(--bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
+                        <h3 style="margin-bottom: 16px;">Import Controls</h3>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                            <button class="btn btn-primary" id="startImportBtn" onclick="startImport()">⬇️ Download & Import Latest Dump</button>
+                            <button class="btn btn-secondary" id="rebuildFtsBtn" onclick="rebuildFts()">⚡ Rebuild FTS Index</button>
+                            <button class="btn btn-secondary" id="refreshStatusBtn" onclick="refreshDiscogsStatus()">🔄 Refresh Status</button>
+                        </div>
+                        <div id="importProgressBar" class="hidden" style="margin-top: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: 700; color: var(--text);" id="importStatusText">Importing...</span>
+                                <span style="color: var(--accent); font-weight: 700;" id="importRecordCounter">0 records</span>
+                            </div>
+                            <div style="height: 6px; background: var(--border); border-radius: 6px; overflow: hidden;">
+                                <div id="importProgressFill" style="height: 100%; background: var(--accent); border-radius: 6px; width: 0%; transition: width 0.5s ease; animation: pulse 2s infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marketplace Stats -->
+                <div class="feature-section">
+                    <h2 style="margin-bottom: 20px;">📊 Marketplace Overview</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 800; color: var(--accent);">1%</div>
+                            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700;">Platform Fee Rate</div>
+                        </div>
+                        <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text); word-break: break-all;">BANK-ACCOUNT-001</div>
+                            <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-top: 4px;">Platform Account</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server Configuration -->
+                <div class="feature-section" style="border-color: #f59e0b;">
+                    <h2 style="margin-bottom: 20px;">⚙️ Server Configuration</h2>
+
+                    <!-- Discogs API Token -->
+                    <div style="background: var(--bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 8px;">🔑 Discogs API Token</h3>
+                        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Required for fetching cover art images. Without a token, requests are limited to ~25/min. With a token, ~60/min. Get one at <a href="https://www.discogs.com/settings/developers" target="_blank" style="color: var(--accent);">discogs.com/settings/developers</a></p>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="password" id="discogsTokenInput" placeholder="Enter your Discogs personal access token..." style="flex: 1; font-family: monospace;">
+                            <button class="btn btn-primary" onclick="saveDiscogsToken()">Save Token</button>
+                            <button class="btn btn-secondary" onclick="clearDiscogsToken()">Clear</button>
+                        </div>
+                        <div id="tokenStatus" style="margin-top: 8px; font-size: 0.8rem;"></div>
+                    </div>
+
+                    <!-- Cover Art Cache -->
+                    <div style="background: var(--bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 8px;">🖼️ Cover Art Cache</h3>
+                        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Cover images are cached locally after first fetch. The cache directory is <code style="color: var(--accent);">covers/</code> on the server.</p>
+                        <div id="cacheInfo" style="font-size: 0.85rem; color: var(--text);">Loading cache info...</div>
+                    </div>
+
+                    <!-- General Config -->
+                    <div style="background: var(--bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border);">
+                        <h3 style="margin-bottom: 8px;">📋 Active Configuration</h3>
+                        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Current server configuration values. Sensitive values (tokens, secrets) are masked.</p>
+                        <div id="configList" style="font-size: 0.85rem; color: var(--text);">Loading...</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                            <h4 style="margin-bottom: 12px; font-size: 0.85rem;">Set Custom Config</h4>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <input type="text" id="configKey" placeholder="Key..." style="flex: 1; min-width: 120px; font-size: 0.85rem;">
+                                <input type="text" id="configValue" placeholder="Value (empty to delete)..." style="flex: 2; min-width: 200px; font-size: 0.85rem;">
+                                <button class="btn btn-secondary" onclick="saveCustomConfig()" style="font-size: 0.8rem;">Set</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Info -->
+                <div class="feature-section">
+                    <h2 style="margin-bottom: 20px;">📌 System Info</h2>
+                    <div style="display: flex; flex-direction: column; gap: 8px; color: var(--text); font-size: 0.9rem;">
+                        <div><strong>Discogs Data Source:</strong> <code style="color: var(--accent);">data.discogs.com</code></div>
+                        <div><strong>Releases Dump:</strong> Latest monthly release from <code style="color: var(--accent);">discogs_YYYYMMDD_releases.xml.gz</code></div>
+                        <div><strong>Database:</strong> <code style="color: var(--accent);">discogs.db</code> (SQLite + FTS5 full-text search)</div>
+                        <div><strong>Cover Cache:</strong> <code style="color: var(--accent);">covers/</code> directory (auto-populated from Discogs API)</div>
+                        <div><strong>Config Store:</strong> <code style="color: var(--accent);">config.db</code> (admin-settable key/value pairs)</div>
+                        <div><strong>Admin User:</strong> <code style="color: var(--accent);">Xpexdex</code></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

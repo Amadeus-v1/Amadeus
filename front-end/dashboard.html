@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>🎭 Amadeus</h1>
+                </div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="themeCheckbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dashboard Container -->
+        <div class="dashboard-container">
+            <header class="dashboard-header" style="text-align: center;">
+                <h1>My Collection Hub</h1>
+                <p>Welcome to your personal physical media management platform</p>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- Quick Actions Grid -->
+                <section class="quick-actions">
+                    <button class="action-card" id="viewCollectionsBtn">
+                        <span class="action-icon">📚</span>
+                        <span class="action-title">My Collection</span>
+                        <span class="action-desc">Browse and organize your library</span>
+                    </button>
+                    <button class="action-card" id="exploreBtn">
+                        <span class="action-icon">🔍</span>
+                        <span class="action-title">Explore</span>
+                        <span class="action-desc">Discover new music</span>
+                    </button>
+                    <button class="action-card" id="barcodeBtn">
+                        <span class="action-icon">📱</span>
+                        <span class="action-title">Barcode Scanner</span>
+                        <span class="action-desc">Scan physical items instantly</span>
+                    </button>
+                    <button class="action-card" id="addItemBtn">
+                        <span class="action-icon">➕</span>
+                        <span class="action-title">Add Item</span>
+                        <span class="action-desc">Manual entry for rare items</span>
+                    </button>
+                    <button class="action-card" id="browseMarketplaceBtn">
+                        <span class="action-icon">🛍️</span>
+                        <span class="action-title">Marketplace</span>
+                        <span class="action-desc">Explore community listings</span>
+                    </button>
+                    <button class="action-card" id="connectFriendsBtn">
+                        <span class="action-icon">👥</span>
+                        <span class="action-title">Friends</span>
+                        <span class="action-desc">Manage your connections</span>
+                    </button>
+                    <button class="action-card" id="myProfileBtn">
+                        <span class="action-icon">👤</span>
+                        <span class="action-title">My Profile</span>
+                        <span class="action-desc">Customize your profile</span>
+                    </button>
+                    <button class="action-card" id="testApiBtn">
+                        <span class="action-icon">🧪</span>
+                        <span class="action-title">Test API</span>
+                        <span class="action-desc">Backend debug tools</span>
+                    </button>
+                    <button class="action-card hidden" id="adminPanelBtn" style="border-color: #ef4444;">
+                        <span class="action-icon">🔧</span>
+                        <span class="action-title">Admin Panel</span>
+                        <span class="action-desc">System management</span>
+                    </button>
+                </section>
+
+                <!-- API Tester Section (Initially Hidden) -->
+                <section id="apiTesterSection" class="feature-section hidden">
+                    <h2>API Tester</h2>
+                    <div class="api-endpoints" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
+                            <h3>/api/hello</h3>
+                            <form class="endpoint-form" id="helloForm">
+                                <div class="form-group">
+                                    <input type="text" placeholder="Enter name" id="helloName" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
+                            </form>
+                            <div id="helloResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
+                        </div>
+
+                        <div class="endpoint-card" style="background: var(--bg); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
+                            <h3>/api/return</h3>
+                            <form class="endpoint-form" id="returnForm">
+                                <div class="form-group">
+                                    <textarea placeholder="key1=value1&key2=value2" id="returnParams" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Test</button>
+                            </form>
+                            <div id="returnResult" class="endpoint-result hidden" style="margin-top: 16px; padding: 12px; background: var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem;"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="closeApiTester()" style="margin-top: 32px;">Close Tester</button>
+                </section>
+
+                <!-- Welcome Content -->
+                <section id="mainContent" class="feature-section">
+                    <div class="welcome-card">
+                        <h2>Welcome to Amadeus! 👋</h2>
+                        <p>Your one-stop destination for media collection management. Build your library, track your items, and connect with collectors worldwide.</p>
+                        <ul class="features-list" style="margin-top: 24px; padding-left: 20px; list-style: none;">
+                            <li style="margin-bottom: 12px;"><strong>Catalog:</strong> Build a digital database of your physical books, movies, and records.</li>
+                            <li style="margin-bottom: 12px;"><strong>Scan:</strong> Use our smart barcode scanner to fetch item details automatically.</li>
+                            <li style="margin-bottom: 12px;"><strong>Connect:</strong> Follow other collectors to see their libraries and latest acquisitions.</li>
+                            <li style="margin-bottom: 12px;"><strong>Trade:</strong> List your duplicates on the marketplace for others to find.</li>
+                        </ul>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus - Your Collection Companion</p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

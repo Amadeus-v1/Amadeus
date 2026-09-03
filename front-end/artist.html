@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amadeus - Artist</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand"><h1>🎭 Amadeus</h1></div>
+                <div class="nav-menu">
+                    <div class="theme-toggle-container">
+                        <span class="theme-label">Mode</span>
+                        <label class="switch"><input type="checkbox" id="themeCheckbox"><span class="slider"></span></label>
+                    </div>
+                    <span id="userGreeting" class="nav-user">Welcome!</span>
+                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <div class="breadcrumb" style="margin-bottom: 24px;">
+                <a href="explore.html" style="color: var(--accent); text-decoration: none; font-weight: 700;">← Back to Explore</a>
+            </div>
+
+            <!-- Artist Header -->
+            <header id="artistHeader" class="dashboard-header">
+                <p style="color: var(--muted);">Loading artist...</p>
+            </header>
+
+            <!-- Filter Bar -->
+            <div id="artistFilters" class="hidden" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;">
+                <select id="artistFilterFormat" style="min-width: 140px;">
+                    <option value="">All Formats</option>
+                </select>
+                <select id="artistFilterDecade" style="min-width: 140px;">
+                    <option value="">All Years</option>
+                </select>
+                <span id="artistCount" style="margin-left: auto; color: var(--muted); font-size: 0.85rem; align-self: center;"></span>
+            </div>
+
+            <!-- Releases Grid -->
+            <main class="dashboard-main">
+                <div id="artistReleases" class="collections-list"></div>
+            </main>
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>🎭 Amadeus — Music data powered by <a href="https://www.discogs.com" target="_blank" style="color: var(--accent); text-decoration: none;">Discogs</a></p>
+        </footer>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="artist.js"></script>
+</body>
+</html>
